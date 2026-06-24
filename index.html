@@ -1677,6 +1677,20 @@ Object.defineProperty(exports, '__esModule', { value: true });
     const pd=mkLabel('Пд','#9aa3a8'); pd.position.set(0,0.7, L3*1.22); scene.add(pd);
     const sx=mkLabel('Сх','#9aa3a8'); sx.position.set( L3*1.22,0.7,0); scene.add(sx);
     const zx=mkLabel('Зх','#9aa3a8'); zx.position.set(-L3*1.22,0.7,0); scene.add(zx);
+    // сузір'я «Курочка» з зір (пасхалка)
+    const henPts=[[2.3,1.5],[1.5,0.7],[0.6,0.95],[0.0,1.15],[-0.5,1.55],[-0.55,1.95],[-0.95,1.5],[-0.45,1.15],[-0.2,0.55],[0.45,0.2],[0.15,-0.45],[0.6,-0.45]];
+    const henSeg=[[0,1],[1,2],[2,3],[3,4],[4,5],[4,6],[4,7],[7,8],[8,9],[9,1],[8,10],[9,11]];
+    const cDir=new THREE.Vector3(Math.sin(-0.8),0,-Math.cos(-0.8)).normalize();
+    const cCenter=cDir.clone().multiplyScalar(50).add(new THREE.Vector3(0,20,0));
+    const cRight=new THREE.Vector3().crossVectors(cDir, new THREE.Vector3(0,1,0)).normalize();
+    const cUp=new THREE.Vector3().crossVectors(cRight, cDir).normalize();
+    const SC=3.4, to3=p=>cCenter.clone().add(cRight.clone().multiplyScalar(p[0]*SC)).add(cUp.clone().multiplyScalar(p[1]*SC));
+    const henV=henPts.map(to3);
+    const hg=new THREE.BufferGeometry(); hg.setAttribute('position', new THREE.Float32BufferAttribute(henV.flatMap(v=>[v.x,v.y,v.z]),3));
+    scene.add(new THREE.Points(hg, new THREE.PointsMaterial({color:0xfff3c4, size:0.6, sizeAttenuation:true})));
+    const hl=[]; henSeg.forEach(([a,b])=>{ hl.push(henV[a],henV[b]); });
+    scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(hl), new THREE.LineBasicMaterial({color:0x8aa0c0, transparent:true, opacity:0.45})));
+    const henLbl=mkLabel('Курочка','#fff3c4'); henLbl.position.copy(cCenter.clone().add(cUp.clone().multiplyScalar(8))); henLbl.scale.set(2.6,1.3,1); scene.add(henLbl);
     t3 = { renderer, scene, camera, mastH, mast, head, cone:null, edges:null, bore:null, terrain:null, raf:null, target:new THREE.Vector3(0,0.4,0) };
     setupControls3(canvas);
     addEventListener('resize', resize3);
@@ -1710,9 +1724,10 @@ Object.defineProperty(exports, '__esModule', { value: true });
   let terrBusy=false;
   async function buildTerrain3(){
     if(!t3) return;
-    if(!lmarker){ status('Спочатку постав точку на мапі','err'); state3.terrain=false; $('#c3terr').classList.remove('on'); return; }
     if(terrBusy) return; terrBusy=true;
-    const ll=lmarker.getLatLng(), range=state3.range, az=state3.az;
+    const mk = lmarker ? lmarker.getLatLng() : (lmap ? lmap.getCenter() : null);
+    if(!mk){ status('Відкрий мапу і постав точку','err'); state3.terrain=false; $('#c3terr').classList.remove('on'); terrBusy=false; return; }
+    const ll={lat:mk.lat,lng:mk.lng}, range=state3.range, az=state3.az;
     $('#c3legend').textContent='Завантаження рельєфу…';
     try{ await demPrefetch(ll.lat, ll.lng, range); }
     catch(e){ status('Рельєф недоступний (потрібен інтернет)','err'); $('#c3legend').textContent='Рельєф недоступний'; state3.terrain=false; $('#c3terr').classList.remove('on'); terrBusy=false; return; }
@@ -1807,22 +1822,34 @@ Object.defineProperty(exports, '__esModule', { value: true });
   let antLayer = null, antennas = [];
   function lon2tile(lon, z) { return (lon + 180) / 360 * Math.pow(2, z); }
   function lat2tile(lat, z) { const r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * Math.pow(2, z); }
+  const DEM_HOSTS = [
+    'https://s3.amazonaws.com/elevation-tiles-prod/terrarium',
+    'https://elevation-tiles-prod.s3.dualstack.us-east-1.amazonaws.com/terrarium',
+    'https://s3.dualstack.us-east-1.amazonaws.com/elevation-tiles-prod/terrarium'
+  ];
+  function loadDemImg(url) {
+    return new Promise((res, rej) => {
+      const img = new Image(); img.crossOrigin = 'anonymous';
+      img.onload = () => res(img); img.onerror = () => rej(new Error('img'));
+      img.src = url;
+    });
+  }
   function getTile(z, x, y) {
     const key = z + '/' + x + '/' + y;
     if (tileData.has(key)) return Promise.resolve();
-    return new Promise((res, rej) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
+    return (async () => {
+      let lastErr;
+      for (const h of DEM_HOSTS) {
         try {
+          const img = await loadDemImg(h + '/' + z + '/' + x + '/' + y + '.png');
           const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-          c.getContext('2d').drawImage(img, 0, 0);
-          tileData.set(key, c.getContext('2d').getImageData(0, 0, 256, 256).data); res();
-        } catch (e) { rej(e); }
-      };
-      img.onerror = () => rej(new Error('tile'));
-      img.src = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/' + z + '/' + x + '/' + y + '.png';
-    });
+          const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
+          tileData.set(key, ctx.getImageData(0, 0, 256, 256).data);
+          return;
+        } catch (e) { lastErr = e; }
+      }
+      throw lastErr || new Error('tile');
+    })();
   }
   async function demPrefetch(latC, lngC, rangeM) {
     const dLat = rangeM / 111320, dLng = rangeM / (111320 * Math.cos(latC * Math.PI / 180)), z = DEM_Z;
