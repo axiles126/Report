@@ -807,29 +807,32 @@ Object.defineProperty(exports, '__esModule', { value: true });
   .seg button.on { color:var(--fg); font-weight:800; }
   .actions { margin-top:24px; display:flex; flex-direction:column; align-items:center; gap:18px; }
   .actions button { background:transparent; border:none; font-size:0; line-height:1; padding:8px; cursor:pointer; }
-  .actions button::before { display:block; font-size:24px; line-height:1; text-transform:none; letter-spacing:0; }
-  #takeoff { padding:6px 28px; }
-  #takeoff::before     { content:"▲"; font-size:34px; color:var(--ok); }
-  #takeoff.flying::before { content:"■"; color:var(--err); }
+  .actions button::before { content:""; display:block; width:26px; height:26px; background-color:currentColor;
+                            -webkit-mask:var(--ic) center/contain no-repeat; mask:var(--ic) center/contain no-repeat; }
+  #takeoff { padding:6px 28px; color:var(--ok); }
+  #takeoff::before { width:34px; height:34px; --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22black%22%3E%3Cpath%20d%3D%22M12%204l7%2014H5z%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E"); }
+  #takeoff.flying { color:var(--err); }
+  #takeoff.flying::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22black%22%3E%3Crect%20x%3D%225.5%22%20y%3D%225.5%22%20width%3D%2213%22%20height%3D%2213%22%20rx%3D%222.5%22%2F%3E%3C%2Fsvg%3E"); }
   .actbar { display:flex; justify-content:center; align-items:center; gap:10px; flex-wrap:wrap; }
   .actbar button { width:54px; height:48px; }
-  #share::before       { content:"↗"; }
-  #map::before         { content:"▦"; }
-  #previewbtn::before  { content:"▤"; }
-  #reset::before       { content:"↺"; }
+  #share::before      { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%225%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2219%22%20r%3D%223%22%2F%3E%3Cline%20x1%3D%228.6%22%20y1%3D%2213.5%22%20x2%3D%2215.4%22%20y2%3D%2217.5%22%2F%3E%3Cline%20x1%3D%2215.4%22%20y1%3D%226.5%22%20x2%3D%228.6%22%20y2%3D%2210.5%22%2F%3E%3C%2Fsvg%3E"); }
+  #map::before        { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2021s-7-6.3-7-12a7%207%200%200%201%2014%200c0%205.7-7%2012-7%2012z%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%229%22%20r%3D%222.5%22%2F%3E%3C%2Fsvg%3E"); }
+  #previewbtn::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%225%22%20y%3D%223%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M8%208h8M8%2012h8M8%2016h5%22%2F%3E%3C%2Fsvg%3E"); }
   #reset { color:var(--dim); }
+  #reset::before      { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M21%2012a9%209%200%201%201-2.64-6.36%22%2F%3E%3Cpath%20d%3D%22M21%203v6h-6%22%2F%3E%3C%2Fsvg%3E"); }
   #reset.confirm { color:var(--err); }
   #install { position:fixed; top:max(6px, env(safe-area-inset-top)); right:max(8px, env(safe-area-inset-right));
              z-index:50; width:40px; height:40px; padding:0;
              background:transparent; border:none; color:var(--fg); font-size:22px; line-height:40px;
              text-align:center; cursor:pointer; }
   #install[hidden] { display:none; }
-  #preview { white-space:pre-wrap; word-break:break-word; font:inherit; font-size:13px;
-             border:1px solid var(--line); padding:12px; margin-top:16px; }
-  #preview.empty { color:var(--dim); }
+  #preview { display:block; width:100%; min-height:170px; resize:vertical; font:inherit; font-size:13px;
+             line-height:1.5; border:1px solid var(--line); padding:12px; margin-top:16px;
+             background:transparent; color:var(--fg); }
   #previewbox[hidden] { display:none; }
   #previewbox #copy { display:block; margin:12px auto 0; padding:8px 18px; border:none; font-size:0; line-height:1; }
-  #copy::before { content:"⧉"; display:block; font-size:26px; text-transform:none; letter-spacing:0; }
+  #copy::before { content:""; display:block; width:28px; height:28px; background-color:currentColor;
+                  -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%229%22%20width%3D%2211%22%20height%3D%2211%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M5%2015H4a1%201%200%200%201-1-1V4a1%201%200%200%201%201-1h10a1%201%200%200%201%201%201v1%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%229%22%20width%3D%2211%22%20height%3D%2211%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M5%2015H4a1%201%200%200%201-1-1V4a1%201%200%200%201%201-1h10a1%201%200%200%201%201%201v1%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; }
   #clock { font-size:clamp(42px,13vw,72px); line-height:1; letter-spacing:2px; text-align:center;
            margin:18px 0 8px; font-variant-numeric:tabular-nums; }
   #clock.live { color:var(--ok); }
@@ -953,7 +956,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
   </div>
 
   <div id="previewbox" hidden>
-    <pre id="preview"></pre>
+    <textarea id="preview" spellcheck="false" placeholder="Звіт зʼявиться тут…"></textarea>
     <button id="copy">Скопіювати</button>
   </div>
 
@@ -1273,7 +1276,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
     catch (e) { status('Скопируйте текст вручную:\n\n' + text, 'err'); }
   }
   async function share() {
-    const text = buildText();
+    const text = reportText();
     if (navigator.share) {
       $('#share').disabled = true;
       try { await navigator.share({ title: $('#callsign').value.trim() || 'Звіт', text }); status('✓ Готово', 'ok'); }
@@ -1284,31 +1287,30 @@ Object.defineProperty(exports, '__esModule', { value: true });
   $('#share').addEventListener('click', share);
 
   async function copyText() {
-    const text = buildText();
+    const text = reportText();
     try { await navigator.clipboard.writeText(text); status('✓ Скопійовано', 'ok'); }
     catch (e) { status('Не вдалося скопіювати. Текст:\n\n' + text, 'err'); }
   }
   $('#copy').addEventListener('click', copyText);
 
-  // ---- попередній перегляд згенерованого звіту ----
-  function updatePreview() {
-    const t = buildText();
-    const pre = $('#preview');
-    if (!t) { pre.textContent = '(порожній звіт — введи назву, коментар або зроби виліт)'; pre.classList.add('empty'); return; }
-    pre.classList.remove('empty');
-    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    pre.innerHTML = t.split('\n').map(line => {
-      const m = line.match(/^\*(Взліт|Сів)\*(:.*)$/);
-      return m ? '<strong>' + m[1] + '</strong>' + esc(m[2]) : esc(line);
-    }).join('\n');
+  // ---- попередній перегляд звіту (редагований) ----
+  let previewEdited = false;
+  function reportText() {
+    return $('#previewbox').hidden ? buildText() : $('#preview').value;
   }
+  function updatePreview() {
+    if (previewEdited) return;                 // не затирати ручні правки
+    const t = buildText() || '';
+    if ($('#preview').value !== t) $('#preview').value = t;
+  }
+  $('#preview').addEventListener('input', () => { previewEdited = true; });
   $('#previewbtn').addEventListener('click', () => {
     const box = $('#previewbox');
     box.hidden = !box.hidden;
     $('#previewbtn').textContent = box.hidden ? 'Перегляд звіту' : 'Сховати звіт';
-    if (!box.hidden) updatePreview();
+    if (!box.hidden) { previewEdited = false; updatePreview(); }   // відкриваємо — підставляємо свіжий звіт
   });
-  // живе оновлення, поки перегляд відкритий
+  // живе оновлення, поки перегляд відкритий і не редагувався вручну
   ['input', 'change', 'click'].forEach(ev =>
     document.addEventListener(ev, () => { if (!$('#previewbox').hidden) updatePreview(); }));
 
