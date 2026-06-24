@@ -860,6 +860,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
   #mapwrap { position:fixed; inset:0; z-index:1000; background:#fff; }
   #mapwrap[hidden] { display:none; }
   #mapview { position:absolute; inset:0; }
+  #mapview .leaflet-tile-pane { filter:grayscale(1) contrast(1.05) brightness(1.03); }
   #mapinfo { position:absolute; top:max(12px, env(safe-area-inset-top)); left:max(14px, env(safe-area-inset-left));
              right:max(60px, calc(env(safe-area-inset-right) + 56px)); z-index:1001; pointer-events:none;
              font-size:13px; color:#111; font-variant-numeric:tabular-nums;
