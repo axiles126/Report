@@ -801,10 +801,14 @@ Object.defineProperty(exports, '__esModule', { value: true });
   button:active { opacity:.6; }
   button:disabled { opacity:.4; cursor:default; }
   #takeoff.flying { color:var(--err); }
-  .seg { display:flex; margin-top:16px; gap:8px; }
-  .seg button { flex:1; padding:8px 6px; background:transparent; border:none; color:var(--dim);
-                font:inherit; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; cursor:pointer; }
+  .seg { display:flex; margin-top:16px; gap:6px; }
+  .seg button { flex:1; padding:8px 3px; background:transparent; border:none; color:var(--dim);
+                font:inherit; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0; cursor:pointer; white-space:nowrap; }
   .seg button.on { color:var(--fg); font-weight:800; }
+  #mediarow { margin-top:18px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; }
+  #mediarow button { background:transparent; border:1px solid var(--line); color:var(--dim);
+                     font:inherit; font-size:12px; padding:8px 12px; cursor:pointer; }
+  #medianame { font-size:12px; color:var(--ok); cursor:pointer; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .actions { margin-top:24px; display:flex; flex-direction:column; align-items:center; gap:18px; }
   .actions button { background:transparent; border:none; font-size:0; line-height:1; padding:8px; cursor:pointer; }
   .actions button::before { content:""; display:block; width:26px; height:26px; background-color:currentColor;
@@ -861,6 +865,17 @@ Object.defineProperty(exports, '__esModule', { value: true });
   #mapwrap[hidden] { display:none; }
   #mapview { position:absolute; inset:0; }
   #mapview .leaflet-tile-pane { filter:grayscale(1) contrast(1.05) brightness(1.03); }
+  .conelbl { background:rgba(255,255,255,.92); border:none !important; box-shadow:0 1px 3px rgba(0,0,0,.3);
+             color:#111; font-family:inherit; font-size:11px; font-weight:600; padding:3px 7px; white-space:nowrap; }
+  .conelbl::before { display:none !important; }
+  .measlbl { background:#2563eb; color:#fff; border:none !important; font-family:inherit; font-size:11px; font-weight:600; padding:3px 7px; cursor:pointer; }
+  .measlbl::before { display:none !important; }
+  .ptpop { font-family:inherit; min-width:158px; }
+  .ptpop .ptname { width:100%; box-sizing:border-box; font:inherit; font-size:13px; padding:5px 6px; border:1px solid #ccc; margin-bottom:7px; }
+  .ptpop .ptcolors { display:flex; gap:5px; margin-bottom:8px; }
+  .ptpop .ptsw { width:22px; height:22px; border:1px solid rgba(0,0,0,.2); border-radius:50%; cursor:pointer; padding:0; }
+  .ptpop .ptbtns { display:flex; gap:6px; }
+  .ptpop .ptbtns button { flex:1; font:inherit; font-size:12px; padding:6px 4px; border:1px solid #ccc; background:#fff; cursor:pointer; }
   #cone3dwrap { position:fixed; inset:0; z-index:1100; background:#0b0d10; }
   #cone3dwrap[hidden] { display:none; }
   #c3canvas { position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; }
@@ -976,9 +991,19 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
   <label>Режим звіту</label>
   <div id="reportmode" class="seg">
-    <button type="button" data-mode="current" class="on">Поточний</button>
-    <button type="button" data-mode="shift">Зміна 24г</button>
-    <button type="button" data-mode="week">Тиждень 7д</button>
+    <button type="button" data-mode="current" class="on">Зараз</button>
+    <button type="button" data-mode="day">День</button>
+    <button type="button" data-mode="night">Ніч</button>
+    <button type="button" data-mode="shift">Доба</button>
+    <button type="button" data-mode="week">7 днів</button>
+  </div>
+
+  <div id="mediarow">
+    <button type="button" id="mediafile">📎 Фото/відео</button>
+    <button type="button" id="mediacam">📷 Камера</button>
+    <span id="medianame" hidden></span>
+    <input type="file" id="mediainput" accept="image/*,video/*" hidden>
+    <input type="file" id="mediacaminput" accept="image/*,video/*" capture="environment" hidden>
   </div>
 
   <div class="actions">
@@ -1304,10 +1329,16 @@ Object.defineProperty(exports, '__esModule', { value: true });
     const name = $('#callsign').value.trim();
     const c = $('#comments').value.trim();
 
-    if (reportMode === 'shift') {
-      // зміна за 24 год: список вильотів (взліт–сів, тривалість, коментар)
-      const within = within24();
-      const lines = [name ? 'Зміна: ' + name : 'Зміна', 'Вилетів за 24 год: ' + within.length];
+    if (reportMode === 'day' || reportMode === 'night' || reportMode === 'shift') {
+      // межі доби: 06:00 поточної робочої доби (до 06:00 — попередня доба)
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0, 0);
+      if (now.getHours() < 6) start.setDate(start.getDate() - 1);
+      const s = start.getTime(), H = 3600e3;
+      const win = reportMode === 'day' ? [s, s + 12 * H] : reportMode === 'night' ? [s + 12 * H, s + 24 * H] : [s, s + 24 * H];
+      const within = flights.filter(f => f.t >= win[0] && f.t < win[1]).sort((a, b) => a.t - b.t);
+      const title = reportMode === 'day' ? 'Зміна день (06:00–18:00)' : reportMode === 'night' ? 'Зміна ніч (18:00–06:00)' : 'Зміна доба (24 год)';
+      const lines = [name ? title + ': ' + name : title, 'Вильотів: ' + within.length];
       for (const f of within) lines.push(sortieLine(f));
       if (c && !activeRec) lines.push(c);
       return lines.join('\n');
@@ -1351,11 +1382,34 @@ Object.defineProperty(exports, '__esModule', { value: true });
     try { await navigator.clipboard.writeText(text); status('Текст скопійовано в буфер, вставте в Signal.', 'ok'); }
     catch (e) { status('Скопируйте текст вручную:\n\n' + text, 'err'); }
   }
+  // ---- необов'язкове вкладення фото/відео ----
+  let attachedFile = null;
+  function setAttached(f) {
+    attachedFile = f || null;
+    const el = $('#medianame');
+    if (attachedFile) { el.hidden = false; el.textContent = '📎 ' + attachedFile.name + '  ✕'; }
+    else { el.hidden = true; el.textContent = ''; }
+  }
+  $('#mediafile').addEventListener('click', () => $('#mediainput').click());
+  $('#mediacam').addEventListener('click', () => $('#mediacaminput').click());
+  $('#mediainput').addEventListener('change', e => setAttached(e.target.files[0]));
+  $('#mediacaminput').addEventListener('change', e => setAttached(e.target.files[0]));
+  $('#medianame').addEventListener('click', () => { setAttached(null); $('#mediainput').value = ''; $('#mediacaminput').value = ''; });
+
   async function share() {
     const text = reportText();
     if (navigator.share) {
       $('#share').disabled = true;
-      try { await navigator.share({ title: $('#callsign').value.trim() || 'Звіт', text }); status('✓ Готово', 'ok'); }
+      try {
+        const data = { title: $('#callsign').value.trim() || 'Звіт', text };
+        let mediaDropped = false;
+        if (attachedFile) {
+          if (navigator.canShare && navigator.canShare({ files: [attachedFile] })) data.files = [attachedFile];
+          else mediaDropped = true;
+        }
+        await navigator.share(data);
+        status(mediaDropped ? '✓ Текст надіслано (медіа додайте вручну)' : '✓ Готово', mediaDropped ? 'dim' : 'ok');
+      }
       catch (e) { if (e && e.name === 'AbortError') status('Отменено', 'dim'); else await fallbackCopy(text); }
       finally { $('#share').disabled = false; }
     } else { await fallbackCopy(text); }
@@ -1437,7 +1491,20 @@ Object.defineProperty(exports, '__esModule', { value: true });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(lmap);
       fixedLayer = L.layerGroup().addTo(lmap); drawFixed();
       antLayer = L.layerGroup().addTo(lmap);
-      lmap.on('click', e => { if (coneMode === 'target' && lmarker) setTarget(e.latlng.lat, e.latlng.lng); else setPick(e.latlng.lat, e.latlng.lng, null, 'map'); });
+      lmap.on('click', e => {
+        if (measureFrom) { finishMeasure(e.latlng.lat, e.latlng.lng); return; }
+        if (coneMode === 'target' && lmarker) setTarget(e.latlng.lat, e.latlng.lng); else setPick(e.latlng.lat, e.latlng.lng, null, 'map');
+      });
+      lmap.on('popupopen', ev => {
+        const el = ev.popup.getElement(); if (!el) return;
+        const root = el.querySelector('.ptpop'); if (!root) return;
+        const idx = +root.dataset.idx, p = fixedPts[idx]; if (!p) return;
+        const nameEl = root.querySelector('.ptname');
+        nameEl.addEventListener('input', () => { p.name = nameEl.value; saveFixed(); });
+        root.querySelectorAll('.ptsw').forEach(b => b.addEventListener('click', () => { p.color = b.dataset.c; saveFixed(); drawFixed(); lmap.closePopup(); }));
+        root.querySelector('.ptdel').addEventListener('click', () => { fixedPts.splice(idx, 1); saveFixed(); drawFixed(); lmap.closePopup(); });
+        root.querySelector('.ptruler').addEventListener('click', () => { startMeasure(p); lmap.closePopup(); });
+      });
       lmap.setView([49.99, 36.23], 6);   // Харків / Україна за замовчуванням
       if (navigator.geolocation) navigator.geolocation.getCurrentPosition(
         p => lmap.setView([p.coords.latitude, p.coords.longitude], 13), () => {},
@@ -1472,7 +1539,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
   });
 
   // ---- компас, ціль, ручний азимут, конус, зафіксовані точки ----
-  let heading = null, conePoly = null, compassOn = false;
+  let heading = null, conePoly = null, compassOn = false, coneLabel = null;
   let coneMode = 'compass', targetLL = null, targetMarker = null;   // 'compass' | 'target' | 'manual'
   let manualAz = parseInt(store.get('kap_manualaz') || '0', 10);
   let coneR = parseInt(store.get('kap_coner') || '120', 10);
@@ -1494,13 +1561,43 @@ Object.defineProperty(exports, '__esModule', { value: true });
   function drawFixed() {
     if (!fixedLayer) return;
     fixedLayer.clearLayers();
-    for (const p of fixedPts) {
+    fixedPts.forEach((p, i) => {
       if (p.cone) L.polygon(conePoints(p.lat, p.lng, p.cone.dir, p.cone.r, p.cone.half),
-        { color: '#c0392b', weight: 1, fillColor: '#c0392b', fillOpacity: 0.18, interactive: false }).addTo(fixedLayer);
-      const col = p.src === 'gps' ? '#1f7a1f' : '#111111';
-      L.circleMarker([p.lat, p.lng], { radius: 6, color: col, weight: 2, fillColor: col, fillOpacity: 0.85 })
-        .bindTooltip(p.mgrs, { direction: 'top' }).addTo(fixedLayer);
-    }
+        { color: p.color || '#c0392b', weight: 1, fillColor: p.color || '#c0392b', fillOpacity: 0.18, interactive: false }).addTo(fixedLayer);
+      const col = p.color || (p.src === 'gps' ? '#1f7a1f' : '#111111');
+      const m = L.circleMarker([p.lat, p.lng], { radius: 6, color: col, weight: 2, fillColor: col, fillOpacity: 0.85 });
+      m.bindTooltip((p.name ? p.name + ' · ' : '') + p.mgrs, { direction: 'top' });
+      m.on('click', () => {
+        if (measureFrom) { finishMeasure(p.lat, p.lng); return; }
+        m.bindPopup(ptPopupHtml(p, i), { className: 'ptpopwrap', closeButton: true }).openPopup();
+      });
+      m.addTo(fixedLayer);
+    });
+  }
+  function ptPopupHtml(p, i) {
+    const cols = ['#c0392b', '#1f7a1f', '#2563eb', '#eab308', '#7c3aed', '#111111'];
+    const sw = cols.map(c => '<button class="ptsw" data-c="' + c + '" style="background:' + c + '"></button>').join('');
+    const nm = (p.name || '').replace(/"/g, '&quot;');
+    return '<div class="ptpop" data-idx="' + i + '"><input class="ptname" type="text" value="' + nm + '" placeholder="Назва точки">' +
+      '<div class="ptcolors">' + sw + '</div>' +
+      '<div class="ptbtns"><button class="ptruler">📏 Лінійка</button><button class="ptdel">🗑 Видалити</button></div></div>';
+  }
+  let measureFrom = null, measureLine = null, measureLbl = null;
+  function startMeasure(p) { measureFrom = { lat: p.lat, lng: p.lng }; $('#mapcoords').textContent = 'Лінійка: оберіть другу точку (тап на точці або мапі)'; }
+  function clearMeasure() { if (measureLine) { lmap.removeLayer(measureLine); measureLine = null; } if (measureLbl) { lmap.removeLayer(measureLbl); measureLbl = null; } measureFrom = null; }
+  function finishMeasure(lat, lng) {
+    if (!measureFrom) return;
+    const d = distance(measureFrom.lat, measureFrom.lng, lat, lng), b = bearing(measureFrom.lat, measureFrom.lng, lat, lng);
+    if (measureLine) lmap.removeLayer(measureLine);
+    measureLine = L.polyline([[measureFrom.lat, measureFrom.lng], [lat, lng]], { color: '#2563eb', weight: 2, dashArray: '6,5' }).addTo(lmap);
+    measureLine.on('click', clearMeasure);
+    if (measureLbl) lmap.removeLayer(measureLbl);
+    measureLbl = L.tooltip({ permanent: true, direction: 'center', className: 'measlbl', interactive: true })
+      .setLatLng([(measureFrom.lat + lat) / 2, (measureFrom.lng + lng) / 2])
+      .setContent(fmtLen(Math.round(d)) + ' · ' + deg(b)).addTo(lmap);
+    measureLbl.on('click', clearMeasure);
+    $('#mapcoords').textContent = 'Лінійка: ' + fmtLen(Math.round(d)) + ' · ' + deg(b) + ' (тап по лінії — прибрати)';
+    measureFrom = null;
   }
 
   function deg(x) { return String(Math.round((x + 360) % 360)).padStart(3, '0') + '°'; }
@@ -1544,13 +1641,19 @@ Object.defineProperty(exports, '__esModule', { value: true });
   }
   function updateCone() {
     if (!lmap || !lmarker) return;
-    if (!coneOn) { if (conePoly) { lmap.removeLayer(conePoly); conePoly = null; } showBearing(null); return; }
+    if (!coneOn) { if (conePoly) { lmap.removeLayer(conePoly); conePoly = null; } if (coneLabel && coneLabel._map) lmap.removeLayer(coneLabel); showBearing(null); return; }
     const dir = coneDir();
-    if (dir == null) { showBearing(null); return; }
+    if (dir == null) { if (coneLabel && coneLabel._map) lmap.removeLayer(coneLabel); showBearing(null); return; }
     const ll = lmarker.getLatLng();
     const pts = conePoints(ll.lat, ll.lng, dir, currentConeR(), coneHalf);
     if (!conePoly) conePoly = L.polygon(pts, { color: '#c0392b', weight: 1, fillColor: '#c0392b', fillOpacity: 0.25, interactive: false }).addTo(lmap);
     else conePoly.setLatLngs(pts);
+    // підпис азимута (градуси + тисячні) і дистанції біля конуса
+    const mils = Math.round(((dir % 360) + 360) % 360 * 6000 / 360);
+    const txt = 'АЗ ' + deg(dir) + ' · ' + mils + ' тис · Д ' + fmtLen(Math.round(currentConeR()));
+    if (!coneLabel) coneLabel = L.tooltip({ permanent: true, direction: 'right', offset: [12, 0], className: 'conelbl', interactive: false });
+    coneLabel.setLatLng(ll).setContent(txt);
+    if (!coneLabel._map) coneLabel.addTo(lmap);
     showBearing(dir);
   }
   function setTarget(lat, lng) {
@@ -1559,11 +1662,21 @@ Object.defineProperty(exports, '__esModule', { value: true });
     else targetMarker.setLatLng([lat, lng]);
     updateCone();
   }
+  let targetHeading = null, headingRAF = null;
   function onOrient(e) {
     let h = null;
     if (typeof e.webkitCompassHeading === 'number') h = e.webkitCompassHeading;   // iOS
     else if (typeof e.alpha === 'number') h = 360 - e.alpha;                       // Android (absolute)
-    if (h != null && !isNaN(h)) { heading = (h + 360) % 360; if (coneMode === 'compass') updateCone(); }
+    if (h != null && !isNaN(h)) { targetHeading = (h + 360) % 360; if (!headingRAF) headingLoop(); }
+  }
+  function headingLoop() {
+    headingRAF = requestAnimationFrame(headingLoop);
+    if (targetHeading == null) return;
+    if (heading == null) heading = targetHeading;
+    const d = ((targetHeading - heading + 540) % 360) - 180;   // найкоротший кут повороту
+    heading = (heading + d * 0.16 + 360) % 360;                 // плавне згладжування
+    if (Math.abs(d) < 0.05) heading = targetHeading;
+    if (coneMode === 'compass' && coneOn) updateCone();
   }
   async function startCompass() {
     if (compassOn) return;
@@ -1615,7 +1728,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
   $('#mapfix').addEventListener('click', () => {
     if (!lmarker || !pickedCoords) return;
     const ll = lmarker.getLatLng();
-    const fp = { lat: ll.lat, lng: ll.lng, mgrs: pickedCoords, src: pickSource };
+    const fp = { lat: ll.lat, lng: ll.lng, mgrs: pickedCoords, src: pickSource, name: '', color: pickSource === 'gps' ? '#1f7a1f' : '#111111' };
     const dir = coneDir();
     if (multiCone && dir != null) fp.cone = { dir, r: currentConeR(), half: coneHalf };
     fixedPts.push(fp);
@@ -2072,7 +2185,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
     } finally { $('#antbuild').disabled = false; }
   });
   $('#antclear').addEventListener('click', () => { if (antLayer) antLayer.clearLayers(); antennas = []; });
-  $('#fixclear').addEventListener('click', () => { fixedPts = []; saveFixed(); drawFixed(); });
+  $('#fixclear').addEventListener('click', () => { fixedPts = []; saveFixed(); drawFixed(); clearMeasure(); });
   // початкові значення повзунків
   $('#conelen').value = coneR; $('#coneang').value = coneHalf * 2; $('#coneaz').value = manualAz;
   $('#lenval').textContent = fmtLen(coneR); $('#angval').textContent = coneHalf * 2; $('#azval').textContent = manualAz;
