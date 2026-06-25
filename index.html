@@ -870,7 +870,17 @@ Object.defineProperty(exports, '__esModule', { value: true });
   #c3close { pointer-events:auto; background:transparent; border:none; color:#dfe3e6;
              font-size:22px; line-height:1; cursor:pointer; padding:2px 4px; }
   .c3topL { display:flex; flex-direction:column; gap:2px; }
+  .c3topR { display:flex; align-items:center; gap:4px; pointer-events:none; }
+  #c3settings { pointer-events:auto; background:transparent; border:none; color:#dfe3e6; padding:2px 4px; cursor:pointer; display:flex; }
+  #c3setpanel { position:absolute; top:max(44px,calc(env(safe-area-inset-top) + 40px)); right:12px; z-index:3;
+                background:rgba(11,13,16,.95); color:#dfe3e6; padding:11px 13px; display:flex; flex-direction:column; gap:9px; font-size:13px; }
+  #c3setpanel[hidden] { display:none; }
+  #c3setpanel label { display:flex; align-items:center; gap:9px; cursor:pointer; }
+  #c3setpanel input[type=checkbox] { width:17px; height:17px; accent-color:#7fd17f; }
+  .c3num { width:62px; background:transparent; border:1px solid #2c3238; color:#dfe3e6; font:inherit; font-size:12px; padding:3px 6px; }
+  #c3azunit { min-width:26px; color:#9aa3a8; }
   #c3back { font-size:14px; font-weight:700; color:#e8ecef; }
+  #c3cov { font-size:12px; font-weight:600; color:#7fd6e0; }
   #c3panel { position:absolute; left:0; right:0; bottom:0; z-index:2;
              background:rgba(11,13,16,.92); color:#dfe3e6;
              padding:12px 16px max(14px,env(safe-area-inset-bottom));
@@ -1025,12 +1035,23 @@ Object.defineProperty(exports, '__esModule', { value: true });
   <div id="c3top">
     <div class="c3topL">
       <div id="c3back">Зворотній азимут: —</div>
+      <div id="c3cov">Коридор висот: —</div>
       <span id="c3legend">Північ — зелена вісь · промінь — біла лінія</span>
     </div>
-    <button id="c3close" title="Закрити">✕</button>
+    <div class="c3topR">
+      <button id="c3settings" title="Налаштування"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="11" cy="18" r="2"/></svg></button>
+      <button id="c3close" title="Закрити">✕</button>
+    </div>
+  </div>
+  <div id="c3setpanel" hidden>
+    <label><input type="checkbox" id="cbCone" checked> Конус</label>
+    <label><input type="checkbox" id="cbBand" checked> Коридор висот</label>
+    <label><input type="checkbox" id="cbGrid" checked> Сітка</label>
+    <label><input type="checkbox" id="cbSky" checked> Зорі та сузір'я</label>
+    <label><input type="checkbox" id="cbMil"> Азимут у тисячних (0–6000)</label>
   </div>
   <div id="c3panel">
-    <label>Азимут <span id="c3azv">0</span>°<input type="range" id="c3az" min="0" max="359" step="1" value="0"></label>
+    <label>Азимут <input type="number" id="c3aznum" class="c3num" min="0" max="359" step="1" value="0"><span id="c3azunit">°</span><input type="range" id="c3az" min="0" max="359" step="1" value="0"></label>
     <label>Кут <span id="c3beamv">60</span>°<input type="range" id="c3beam" min="10" max="160" step="5" value="60"></label>
     <label>Нахил <span id="c3elevv">0</span>°<input type="range" id="c3elev" min="-30" max="60" step="1" value="0"></label>
     <label>Вис. ант. <span id="c3anthv">2 м</span><input type="range" id="c3anth" min="0" max="120" step="1" value="2"></label>
@@ -1613,7 +1634,8 @@ Object.defineProperty(exports, '__esModule', { value: true });
   function loadScript3(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('load'));document.head.appendChild(s);});}
   let three3Ready=null;
   function loadThree3(){ return three3Ready || (three3Ready = window.THREE?Promise.resolve():loadScript3('https://unpkg.com/three@0.128.0/build/three.min.js')); }
-  const state3 = { az:0, beam:60, elev:0, range:120, yaw:0.7, pitch:0.9, dist:18 };
+  const state3 = { az:0, beam:60, elev:0, range:120, antH:2, yaw:0.7, pitch:0.9, dist:18,
+                   showCone:true, showBand:true, showGrid:true, showSky:true, azMil:false };
   let t3 = null;
   const L3 = 9;
   function dir3(){ const a=state3.az*Math.PI/180, e=state3.elev*Math.PI/180;
@@ -1638,7 +1660,37 @@ Object.defineProperty(exports, '__esModule', { value: true });
     const end = apex.clone().add(dir3().clone().multiplyScalar(L3));
     t3.bore = new THREE.Line(new THREE.BufferGeometry().setFromPoints([apex, end]), new THREE.LineBasicMaterial({ color:0xffffff, transparent:true, opacity:0.75 }));
     t3.scene.add(t3.bore);
+    // коридор висот (вертикальний розкрив променя за нахилом і кутом)
+    if(t3.band){ t3.scene.remove(t3.band); t3.band.traverse(o=>{ o.geometry&&o.geometry.dispose(); o.material&&o.material.dispose(); }); }
+    const bg=new THREE.Group();
+    const tn=a=>Math.tan(Math.max(-88,Math.min(88,a))*Math.PI/180);
+    const E=state3.elev, hd=state3.beam/2, upA=E+hd, loA=E-hd;
+    const gnd=new THREE.Vector3(Math.sin(state3.az*Math.PI/180),0,-Math.cos(state3.az*Math.PI/180));
+    const upEnd=apex.clone().add(gnd.clone().multiplyScalar(L3)).add(new THREE.Vector3(0,L3*tn(upA),0));
+    const loEnd=apex.clone().add(gnd.clone().multiplyScalar(L3)).add(new THREE.Vector3(0,L3*tn(loA),0));
+    const cyan=0x5ad1e0, ml=(p0,p1,op)=>bg.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p0,p1]), new THREE.LineBasicMaterial({color:cyan,transparent:true,opacity:op})));
+    ml(apex,upEnd,0.85); ml(apex,loEnd,0.85); ml(upEnd,loEnd,0.95);
+    const tick=new THREE.Vector3(gnd.z,0,-gnd.x).multiplyScalar(0.18);
+    ml(upEnd.clone().sub(tick),upEnd.clone().add(tick),0.95); ml(loEnd.clone().sub(tick),loEnd.clone().add(tick),0.95);
+    t3.band=bg; t3.scene.add(bg);
+    const D=state3.range, hUp=state3.antH+D*tn(upA), hLo=state3.antH+D*tn(loA);
+    const covEl=document.getElementById('c3cov');
+    if(covEl) covEl.textContent='Коридор висот @ '+fmtLen(D)+': '+Math.max(0,Math.round(hLo))+'–'+Math.round(hUp)+' м (над антеною)';
+    applyVis3();
   }
+  function applyVis3(){ if(!t3) return;
+    if(t3.grid) t3.grid.visible=state3.showGrid;
+    if(t3.sky) t3.sky.visible=state3.showSky;
+    if(t3.cone) t3.cone.visible=state3.showCone;
+    if(t3.edges) t3.edges.visible=state3.showCone;
+    if(t3.band) t3.band.visible=state3.showBand;
+  }
+  function setAzNumDisplay(){ const n=document.getElementById('c3aznum'); if(!n) return;
+    n.value = state3.azMil ? Math.round(state3.az*6000/360) : Math.round(state3.az); }
+  function updateAzUnit(){ const u=document.getElementById('c3azunit'), n=document.getElementById('c3aznum');
+    if(u) u.textContent = state3.azMil ? 'тис' : '°';
+    if(n){ n.max = state3.azMil ? 6000 : 359; n.step = state3.azMil ? 5 : 1; }
+    setAzNumDisplay(); }
   function init3D(){
     if(t3) return;
     const canvas = $('#c3canvas');
@@ -1648,7 +1700,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
     const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
     scene.add(new THREE.AmbientLight(0xffffff, 0.85));
     const dl = new THREE.DirectionalLight(0xffffff, 0.5); dl.position.set(5,10,7); scene.add(dl);
-    scene.add(new THREE.GridHelper(L3*2.4, 24, 0x2a3036, 0x1b2024));
+    const gridRef = new THREE.GridHelper(L3*2.4, 24, 0x2a3036, 0x1b2024); scene.add(gridRef);
     for(const f of [1/3,2/3,1]){ const pts=[]; for(let i=0;i<=64;i++){const a=i/64*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a)*L3*f,0.01,Math.sin(a)*L3*f));}
       scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:0x2a3036}))); }
     const mkAxis=(x,z,c)=>{ scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0.02,0),new THREE.Vector3(x*L3*1.15,0.02,z*L3*1.15)]), new THREE.LineBasicMaterial({color:c}))); };
@@ -1658,40 +1710,41 @@ Object.defineProperty(exports, '__esModule', { value: true });
     mast.position.set(0,mastH/2,0); scene.add(mast);
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.16,0.22,0.06), new THREE.MeshPhongMaterial({color:0xdfe3e6}));
     head.position.set(0,mastH,0); scene.add(head);
-    // нічне небо: зорі
+    // нічне небо (зорі + місяць + сузір'я) — у групі для перемикання
+    const sky=new THREE.Group();
     const sv=[]; for(let i=0;i<700;i++){ const r=60, th=Math.random()*2*Math.PI, ph=Math.acos(2*Math.random()-1);
       sv.push(r*Math.sin(ph)*Math.cos(th), Math.abs(r*Math.cos(ph))+2, r*Math.sin(ph)*Math.sin(th)); }
     const sg=new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sv,3));
-    scene.add(new THREE.Points(sg, new THREE.PointsMaterial({color:0xffffff, size:0.2, sizeAttenuation:true, transparent:true, opacity:0.9})));
-    // місяць
-    const moon=new THREE.Mesh(new THREE.SphereGeometry(2.2,24,24), new THREE.MeshBasicMaterial({color:0xeef0f2}));
-    moon.position.set(-24,18,-30); scene.add(moon);
-    const glow=new THREE.Mesh(new THREE.SphereGeometry(3.0,24,24), new THREE.MeshBasicMaterial({color:0xaab4bf, transparent:true, opacity:0.16}));
-    glow.position.copy(moon.position); scene.add(glow);
-    // підписи сторін світу
-    const mkLabel=(txt,col)=>{ const c=document.createElement('canvas'); c.width=128; c.height=64; const g=c.getContext('2d');
-      g.fillStyle=col; g.font='bold 42px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(txt,64,34);
+    sky.add(new THREE.Points(sg, new THREE.PointsMaterial({color:0xffffff, size:0.2, sizeAttenuation:true, transparent:true, opacity:0.9})));
+    const moon=new THREE.Mesh(new THREE.SphereGeometry(2.2,24,24), new THREE.MeshBasicMaterial({color:0xeef0f2})); moon.position.set(-24,18,-30); sky.add(moon);
+    const glow=new THREE.Mesh(new THREE.SphereGeometry(3.0,24,24), new THREE.MeshBasicMaterial({color:0xaab4bf, transparent:true, opacity:0.16})); glow.position.copy(moon.position); sky.add(glow);
+    const mkLabel=(txt,col,fs)=>{ const c=document.createElement('canvas'); c.width=160; c.height=64; const g=c.getContext('2d');
+      g.fillStyle=col; g.font='bold '+(fs||42)+'px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(txt,80,34);
       const tx=new THREE.CanvasTexture(c); tx.minFilter=THREE.LinearFilter;
-      const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tx, transparent:true, depthTest:false})); sp.scale.set(1.5,0.75,1); return sp; };
-    const pn=mkLabel('Пн','#7fd17f'); pn.position.set(0,0.7,-L3*1.22); scene.add(pn);
-    const pd=mkLabel('Пд','#9aa3a8'); pd.position.set(0,0.7, L3*1.22); scene.add(pd);
-    const sx=mkLabel('Сх','#9aa3a8'); sx.position.set( L3*1.22,0.7,0); scene.add(sx);
-    const zx=mkLabel('Зх','#9aa3a8'); zx.position.set(-L3*1.22,0.7,0); scene.add(zx);
-    // сузір'я «Курочка» з зір (пасхалка)
+      const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tx, transparent:true, depthTest:false})); sp.scale.set(1.5,0.6,1); return sp; };
+    const pn=mkLabel('Пн','#7fd17f'); pn.position.set(0,0.7,-L3*1.22); pn.scale.set(1.5,0.75,1); scene.add(pn);
+    const pd=mkLabel('Пд','#9aa3a8'); pd.position.set(0,0.7, L3*1.22); pd.scale.set(1.5,0.75,1); scene.add(pd);
+    const sx=mkLabel('Сх','#9aa3a8'); sx.position.set( L3*1.22,0.7,0); sx.scale.set(1.5,0.75,1); scene.add(sx);
+    const zx=mkLabel('Зх','#9aa3a8'); zx.position.set(-L3*1.22,0.7,0); zx.scale.set(1.5,0.75,1); scene.add(zx);
+    // сузір'я Велика і Мала Курочка
     const henPts=[[2.3,1.5],[1.5,0.7],[0.6,0.95],[0.0,1.15],[-0.5,1.55],[-0.55,1.95],[-0.95,1.5],[-0.45,1.15],[-0.2,0.55],[0.45,0.2],[0.15,-0.45],[0.6,-0.45]];
     const henSeg=[[0,1],[1,2],[2,3],[3,4],[4,5],[4,6],[4,7],[7,8],[8,9],[9,1],[8,10],[9,11]];
     const cDir=new THREE.Vector3(Math.sin(-0.8),0,-Math.cos(-0.8)).normalize();
     const cCenter=cDir.clone().multiplyScalar(50).add(new THREE.Vector3(0,20,0));
     const cRight=new THREE.Vector3().crossVectors(cDir, new THREE.Vector3(0,1,0)).normalize();
     const cUp=new THREE.Vector3().crossVectors(cRight, cDir).normalize();
-    const SC=3.4, to3=p=>cCenter.clone().add(cRight.clone().multiplyScalar(p[0]*SC)).add(cUp.clone().multiplyScalar(p[1]*SC));
-    const henV=henPts.map(to3);
-    const hg=new THREE.BufferGeometry(); hg.setAttribute('position', new THREE.Float32BufferAttribute(henV.flatMap(v=>[v.x,v.y,v.z]),3));
-    scene.add(new THREE.Points(hg, new THREE.PointsMaterial({color:0xfff3c4, size:0.6, sizeAttenuation:true})));
-    const hl=[]; henSeg.forEach(([a,b])=>{ hl.push(henV[a],henV[b]); });
-    scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(hl), new THREE.LineBasicMaterial({color:0x8aa0c0, transparent:true, opacity:0.45})));
-    const henLbl=mkLabel('Курочка','#fff3c4'); henLbl.position.copy(cCenter.clone().add(cUp.clone().multiplyScalar(8))); henLbl.scale.set(2.6,1.3,1); scene.add(henLbl);
-    t3 = { renderer, scene, camera, mastH, mast, head, cone:null, edges:null, bore:null, terrain:null, raf:null, target:new THREE.Vector3(0,0.4,0) };
+    const buildHen=(center,scale,label,ptSize)=>{
+      const v=henPts.map(p=>center.clone().add(cRight.clone().multiplyScalar(p[0]*scale)).add(cUp.clone().multiplyScalar(p[1]*scale)));
+      const hg=new THREE.BufferGeometry(); hg.setAttribute('position', new THREE.Float32BufferAttribute(v.flatMap(q=>[q.x,q.y,q.z]),3));
+      sky.add(new THREE.Points(hg, new THREE.PointsMaterial({color:0xfff3c4, size:ptSize, sizeAttenuation:true})));
+      const hl=[]; henSeg.forEach(([a,b])=>{ hl.push(v[a],v[b]); });
+      sky.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(hl), new THREE.LineBasicMaterial({color:0x8aa0c0, transparent:true, opacity:0.45})));
+      const lbl=mkLabel(label,'#fff3c4',34); lbl.position.copy(center.clone().add(cUp.clone().multiplyScalar(scale*2.1))); lbl.scale.set(3.0,1.2,1); sky.add(lbl);
+    };
+    buildHen(cCenter, 3.4, 'Велика курочка', 0.62);
+    buildHen(cCenter.clone().add(cRight.clone().multiplyScalar(15)).add(cUp.clone().multiplyScalar(-7)), 1.7, 'Мала курочка', 0.4);
+    scene.add(sky);
+    t3 = { renderer, scene, camera, mastH, mast, head, grid:gridRef, sky, cone:null, edges:null, bore:null, band:null, terrain:null, raf:null, target:new THREE.Vector3(0,0.4,0) };
     setupControls3(canvas);
     addEventListener('resize', resize3);
   }
@@ -1719,6 +1772,12 @@ Object.defineProperty(exports, '__esModule', { value: true });
     t3.mast.scale.y=u/0.7; t3.mast.position.y=u/2; t3.head.position.y=u; t3.mastH=u; rebuildCone3(); }
   function applyMastSymbolic(){ setMastVisual(0.3 + Math.min(1.1, (state3.antH||0)/120*1.1)); }
   function relAt(dist, rel, d){ for(let i=1;i<dist.length;i++){ if(dist[i]>=d){ const t=(d-dist[i-1])/(dist[i]-dist[i-1]||1); return rel[i-1]+(rel[i]-rel[i-1])*t; } } return rel[rel.length-1]; }
+  function relPolar(elev, NA, NR, range, az, d){
+    const fr=Math.max(0,Math.min(NR, d/range*NR)), ir0=Math.floor(fr), ir1=Math.min(NR,ir0+1), tr=fr-ir0;
+    const fa=(((az%360)+360)%360)/360*NA, ia0=Math.floor(fa)%NA, ia1=(ia0+1)%NA, ta=fa-Math.floor(fa);
+    const v=(r,i0,i1,t)=>elev[r][i0]*(1-t)+elev[r][i1]*t;
+    return v(ir0,ia0,ia1,ta)*(1-tr)+v(ir1,ia0,ia1,ta)*tr;
+  }
   function clearTerrainMeshes(){ if(t3&&t3.terrain){ t3.scene.remove(t3.terrain); t3.terrain.traverse(o=>{ if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose(); }); t3.terrain=null; } }
   const DEF_LEGEND3 = 'Північ — зелена вісь · промінь — біла лінія';
   let terrBusy=false;
@@ -1733,37 +1792,64 @@ Object.defineProperty(exports, '__esModule', { value: true });
     catch(e){ status('Рельєф недоступний (потрібен інтернет)','err'); $('#c3legend').textContent='Рельєф недоступний'; state3.terrain=false; $('#c3terr').classList.remove('on'); terrBusy=false; return; }
     const g0=elevSync(ll.lat,ll.lng);
     if(g0==null){ status('Немає даних рельєфу для цієї точки','err'); state3.terrain=false; $('#c3terr').classList.remove('on'); $('#c3legend').textContent=DEF_LEGEND3; terrBusy=false; return; }
-    const N=80, k=1.33, R=6371000, antH=state3.antH, tgtH=parseFloat($('#tgth').value)||0;
+    const u=L3/range, k=1.33, R=6371000, antH=state3.antH, tgtH=parseFloat($('#tgth').value)||0;
     const fMHz=parseFloat($('#antfreq').value)||0, lam=fMHz>0?299792458/(fMHz*1e6):0, Hobs=g0+antH;
-    const dist=[], rel=[]; let maxAbs=1, reach=range, maxAng=-Infinity, blocked=false;
-    for(let i=0;i<=N;i++){
-      const d=range*i/N, p=destPoint(ll.lat,ll.lng,az,d), e=(i===0)?g0:(elevSync(p[0],p[1]) ?? g0);
-      dist.push(d); rel.push(e-g0); maxAbs=Math.max(maxAbs,Math.abs(e-g0));
-      if(d>0 && !blocked){
-        const curv=d*d/(2*k*R), fres=lam>0?0.6*Math.sqrt(lam*d*Math.max(1,range-d)/range):0;
-        const angTerr=((e+fres-curv)-Hobs)/d, angTgt=((e+tgtH-curv)-Hobs)/d;
-        if(angTgt<maxAng){ reach=d; blocked=true; }
-        if(angTerr>maxAng) maxAng=angTerr;
+    // полярна сітка реальних висот навколо точки (360°)
+    const NA=72, NR=44;
+    const elev=[]; let minRel=0, maxRel=0;
+    for(let ir=0; ir<=NR; ir++){
+      const r=range*ir/NR, row=[];
+      for(let ia=0; ia<NA; ia++){
+        let e;
+        if(ir===0){ e=g0; }
+        else { const p=destPoint(ll.lat,ll.lng, ia*360/NA, r); e=elevSync(p[0],p[1]); if(e==null)e=g0; }
+        const rel=e-g0; row.push(rel); if(rel<minRel)minRel=rel; if(rel>maxRel)maxRel=rel;
       }
+      elev.push(row);
     }
-    const u=L3/range, a=az*Math.PI/180, gx=Math.sin(a), gz=-Math.cos(a);
+    const maxAbs=Math.max(1, Math.abs(minRel), Math.abs(maxRel));
     const vScale=Math.min(30, Math.max(1, 1.8/Math.max(u*maxAbs, u*Math.max(antH,1), 0.02)));
     clearTerrainMeshes();
     const grp=new THREE.Group();
-    const top=[]; for(let i=0;i<=N;i++){ top.push(new THREE.Vector3(dist[i]*u*gx, rel[i]*u*vScale, dist[i]*u*gz)); }
-    const pos=[], idx=[], baseY=-0.02;
-    for(let i=0;i<=N;i++){ pos.push(top[i].x,top[i].y,top[i].z, top[i].x,baseY,top[i].z); }
-    for(let i=0;i<N;i++){ const b=i*2; idx.push(b,b+1,b+2, b+1,b+3,b+2); }
-    const tg=new THREE.BufferGeometry(); tg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); tg.setIndex(idx); tg.computeVertexNormals();
-    grp.add(new THREE.Mesh(tg, new THREE.MeshPhongMaterial({color:0x5a5048, side:THREE.DoubleSide, transparent:true, opacity:0.92})));
-    grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(top), new THREE.LineBasicMaterial({color:0xb98a5a})));
+    // вершини + колір за висотою (відтінки сірого)
+    const pos=[], col=[], idx=[], span=Math.max(1, maxRel-minRel);
+    for(let ir=0; ir<=NR; ir++){
+      const rr=range*ir/NR*u;
+      for(let ia=0; ia<NA; ia++){
+        const a=ia*360/NA*Math.PI/180;
+        pos.push(rr*Math.sin(a), elev[ir][ia]*u*vScale, -rr*Math.cos(a));
+        const v=0.20+0.62*((elev[ir][ia]-minRel)/span); col.push(v,v,v);
+      }
+    }
+    for(let ir=0; ir<NR; ir++){
+      for(let ia=0; ia<NA; ia++){
+        const a0=ir*NA+ia, a1=ir*NA+(ia+1)%NA, b0=(ir+1)*NA+ia, b1=(ir+1)*NA+(ia+1)%NA;
+        idx.push(a0,b0,a1, a1,b0,b1);
+      }
+    }
+    const tg=new THREE.BufferGeometry();
+    tg.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+    tg.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
+    tg.setIndex(idx); tg.computeVertexNormals();
+    grp.add(new THREE.Mesh(tg, new THREE.MeshLambertMaterial({ vertexColors:true, side:THREE.DoubleSide })));
+    // LOS уздовж азимута (видимість променя)
+    let reach=range, maxAng=-Infinity, blocked=false; const NB=80;
+    for(let i=1;i<=NB;i++){
+      const d=range*i/NB, p=destPoint(ll.lat,ll.lng,az,d), e=(elevSync(p[0],p[1]) ?? g0);
+      const curv=d*d/(2*k*R), fres=lam>0?0.6*Math.sqrt(lam*d*Math.max(1,range-d)/range):0;
+      const angTerr=((e+fres-curv)-Hobs)/d, angTgt=((e+tgtH-curv)-Hobs)/d;
+      if(!blocked && angTgt<maxAng){ reach=d; blocked=true; }
+      if(angTerr>maxAng) maxAng=angTerr;
+    }
     setMastVisual(Math.max(0.18, antH*u*vScale));
+    const a=az*Math.PI/180, gx=Math.sin(a), gz=-Math.cos(a);
     const apex=new THREE.Vector3(0, t3.mastH, 0);
-    const rx=reach*u, visEnd=new THREE.Vector3(rx*gx, (relAt(dist,rel,reach)+tgtH)*u*vScale, rx*gz);
+    const rx=reach*u, visEnd=new THREE.Vector3(rx*gx, (relPolar(elev,NA,NR,range,az,reach)+tgtH)*u*vScale, rx*gz);
     grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([apex, visEnd]), new THREE.LineBasicMaterial({color:0x7fd17f})));
     if(blocked){ const fullEnd=new THREE.Vector3(L3*gx, apex.y, L3*gz);
       grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([visEnd, fullEnd]), new THREE.LineBasicMaterial({color:0xc0392b, transparent:true, opacity:0.6}))); }
     t3.terrain=grp; t3.scene.add(grp);
+    rebuildCone3();
     $('#c3legend').textContent=(blocked?('Видимість: '+fmtLen(Math.round(reach))):'Пряма видимість на всю дальність')+(vScale>=1.5?(' · рельєф ×'+vScale.toFixed(0)):'');
     terrBusy=false;
   }
@@ -1776,22 +1862,32 @@ Object.defineProperty(exports, '__esModule', { value: true });
     const az=coneDir(); state3.az=(az==null?manualAz:Math.round(((az%360)+360)%360));
     state3.beam=Math.round(coneHalf*2); state3.elev=0; state3.range=Math.round(currentConeR());
     state3.antH=Math.round(parseFloat($('#anth').value)||2); state3.terrain=false;
-    $('#c3az').value=state3.az; $('#c3azv').textContent=state3.az;
+    $('#c3az').value=state3.az; updateAzUnit();
     $('#c3beam').value=state3.beam; $('#c3beamv').textContent=state3.beam;
     $('#c3elev').value=0; $('#c3elevv').textContent=0;
     $('#c3anth').value=state3.antH; $('#c3anthv').textContent=fmtLen(state3.antH);
     $('#c3range').value=Math.min(15000,state3.range); $('#c3rangev').textContent=fmtLen(state3.range);
     $('#c3terr').classList.remove('on'); $('#c3legend').textContent=DEF_LEGEND3;
-    setBack3();
-    clearTerrainMeshes(); applyMastSymbolic(); rebuildCone3(); resize3();
+    $('#c3setpanel').hidden=true; setBack3();
+    clearTerrainMeshes(); applyMastSymbolic(); rebuildCone3(); applyVis3(); resize3();
     if(!t3.raf) animate3();
   }
   $('#cone3d').addEventListener('click', open3D);
   $('#c3close').addEventListener('click', close3D);
-  $('#c3az').addEventListener('input',()=>{ state3.az=+$('#c3az').value; $('#c3azv').textContent=state3.az; setBack3(); rebuildCone3(); });
+  $('#c3az').addEventListener('input',()=>{ state3.az=+$('#c3az').value; setAzNumDisplay(); setBack3(); rebuildCone3(); });
+  $('#c3aznum').addEventListener('input',()=>{ let v=parseFloat($('#c3aznum').value); if(isNaN(v)) return;
+    let deg=state3.azMil ? v*360/6000 : v; deg=((deg%360)+360)%360; state3.az=Math.round(deg);
+    $('#c3az').value=state3.az; setBack3(); rebuildCone3(); });
+  $('#c3aznum').addEventListener('change',()=>{ if(state3.terrain) buildTerrain3(); });
+  $('#c3settings').addEventListener('click',()=>{ const p=$('#c3setpanel'); p.hidden=!p.hidden; });
+  $('#cbCone').addEventListener('change',()=>{ state3.showCone=$('#cbCone').checked; applyVis3(); });
+  $('#cbBand').addEventListener('change',()=>{ state3.showBand=$('#cbBand').checked; applyVis3(); });
+  $('#cbGrid').addEventListener('change',()=>{ state3.showGrid=$('#cbGrid').checked; applyVis3(); });
+  $('#cbSky').addEventListener('change',()=>{ state3.showSky=$('#cbSky').checked; applyVis3(); });
+  $('#cbMil').addEventListener('change',()=>{ state3.azMil=$('#cbMil').checked; updateAzUnit(); });
   $('#c3beam').addEventListener('input',()=>{ state3.beam=+$('#c3beam').value; $('#c3beamv').textContent=state3.beam; rebuildCone3(); });
   $('#c3elev').addEventListener('input',()=>{ state3.elev=+$('#c3elev').value; $('#c3elevv').textContent=state3.elev; rebuildCone3(); });
-  $('#c3range').addEventListener('input',()=>{ state3.range=+$('#c3range').value; $('#c3rangev').textContent=fmtLen(state3.range); });
+  $('#c3range').addEventListener('input',()=>{ state3.range=+$('#c3range').value; $('#c3rangev').textContent=fmtLen(state3.range); rebuildCone3(); });
   $('#c3reset').addEventListener('click',()=>{ state3.yaw=0.7; state3.pitch=0.9; state3.dist=18; });
   $('#c3anth').addEventListener('input',()=>{ state3.antH=+$('#c3anth').value; $('#c3anthv').textContent=fmtLen(state3.antH);
     $('#anth').value=state3.antH; if(state3.terrain) buildTerrain3(); else applyMastSymbolic(); });
