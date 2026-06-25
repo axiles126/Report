@@ -805,13 +805,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
   .seg button { flex:1; padding:8px 3px; background:transparent; border:none; color:var(--dim);
                 font:inherit; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0; cursor:pointer; white-space:nowrap; }
   .seg button.on { color:var(--fg); font-weight:800; }
-  #mediarow { margin-top:18px; display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:center; gap:20px; }
-  .mbtn { background:transparent; border:none; padding:4px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--dim); }
-  .mbtn .mic { font-size:23px; line-height:1; }
-  .mbtn .mlbl { font-size:11px; }
-  #medianame { width:100%; text-align:center; font-size:12px; color:var(--ok); cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  #mediaprev { width:100%; }
-  #mediaprev img, #mediaprev video { display:block; max-width:100%; max-height:200px; margin:8px auto 0; border-radius:4px; }
   .actions { margin-top:24px; display:flex; flex-direction:column; align-items:center; gap:18px; }
   .actions button { background:transparent; border:none; font-size:0; line-height:1; padding:8px; cursor:pointer; }
   .actions button::before { content:""; display:block; width:26px; height:26px; background-color:currentColor;
@@ -828,6 +821,32 @@ Object.defineProperty(exports, '__esModule', { value: true });
   #reset { color:var(--dim); }
   #reset::before      { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M21%2012a9%209%200%201%201-2.64-6.36%22%2F%3E%3Cpath%20d%3D%22M21%203v6h-6%22%2F%3E%3C%2Fsvg%3E"); }
   #reset.confirm { color:var(--err); }
+  #voice::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%222%22%20width%3D%226%22%20height%3D%2211%22%20rx%3D%223%22%2F%3E%3Cpath%20d%3D%22M5%2010a7%207%200%200%200%2014%200%22%2F%3E%3Cline%20x1%3D%2212%22%20y1%3D%2219%22%20x2%3D%2212%22%20y2%3D%2222%22%2F%3E%3Cline%20x1%3D%228%22%20y1%3D%2222%22%20x2%3D%2216%22%20y2%3D%2222%22%2F%3E%3C%2Fsvg%3E"); }
+  #voice.on { color:var(--err); }
+  #voice.on::before { animation:vpulse 1s ease-in-out infinite; }
+  @keyframes vpulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  #vhelp::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%2210%22%2F%3E%3Cpath%20d%3D%22M9.1%209a3%203%200%200%201%205.8%201c0%202-3%203-3%203%22%2F%3E%3Cline%20x1%3D%2212%22%20y1%3D%2217%22%20x2%3D%2212%22%20y2%3D%2217.01%22%2F%3E%3C%2Fsvg%3E"); }
+  #vhelpbox { position:fixed; inset:0; z-index:2100; background:rgba(0,0,0,.45);
+              display:flex; align-items:center; justify-content:center; padding:20px; }
+  #vhelpbox[hidden] { display:none; }
+  #vhelpbox .card { background:#fff; border:1px solid var(--line); max-width:440px; width:100%;
+                    padding:20px; max-height:85vh; overflow-y:auto; }
+  #vhelpbox .hh { font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-bottom:14px; }
+  .vcmds { margin:0; }
+  .vcmds dt { font-weight:700; font-size:13px; margin-top:10px; }
+  .vcmds dt:first-child { margin-top:0; }
+  .vcmds dd { margin:2px 0 0; font-size:13px; color:var(--dim); }
+  .vnote { font-size:12px; color:var(--dim); margin:16px 0 14px; line-height:1.5; }
+  #vhelpbox #vhok { width:100%; border:none; background:transparent; font:inherit; font-weight:700; padding:12px; cursor:pointer; }
+  #vhelp::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%2210%22%2F%3E%3Cpath%20d%3D%22M9.09%209a3%203%200%200%201%205.83%201c0%202-3%203-3%203%22%2F%3E%3Cline%20x1%3D%2212%22%20y1%3D%2217%22%20x2%3D%2212.01%22%20y2%3D%2217%22%2F%3E%3C%2Fsvg%3E"); }
+  #vhelpbox { position:fixed; inset:0; z-index:2100; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:20px; }
+  #vhelpbox[hidden] { display:none; }
+  #vhelpbox .card { background:#fff; border:1px solid var(--line); max-width:430px; width:100%; padding:18px; max-height:85vh; overflow-y:auto; }
+  #vhelpbox .hh { font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-bottom:12px; }
+  .vhlist { list-style:none; padding:0; margin:0 0 12px; display:flex; flex-direction:column; gap:8px; font-size:13px; line-height:1.5; }
+  .vhlist b { font-weight:700; }
+  .vhnote { font-size:12px; color:var(--dim); margin:0 0 14px; line-height:1.5; }
+  #vhok { width:100%; border:none; background:transparent; color:var(--fg); font:inherit; font-weight:700; padding:12px; cursor:pointer; }
   #install { position:fixed; top:max(6px, env(safe-area-inset-top)); right:max(8px, env(safe-area-inset-right));
              z-index:50; width:40px; height:40px; padding:0;
              background:transparent; border:none; color:var(--fg); font-size:22px; line-height:40px;
@@ -1001,17 +1020,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
     <button type="button" data-mode="week">7 днів</button>
   </div>
 
-  <div id="mediarow">
-    <button type="button" id="mediafile" class="mbtn"><span class="mic">📎</span><span class="mlbl">Файл</span></button>
-    <button type="button" id="mediaphoto" class="mbtn"><span class="mic">📷</span><span class="mlbl">Фото</span></button>
-    <button type="button" id="mediavideo" class="mbtn"><span class="mic">🎥</span><span class="mlbl">Відео</span></button>
-    <span id="medianame" hidden></span>
-    <div id="mediaprev" hidden></div>
-    <input type="file" id="mediainput" accept="image/*,video/*" hidden>
-    <input type="file" id="mediaphotoinput" accept="image/*" capture="environment" hidden>
-    <input type="file" id="mediavideoinput" accept="video/*" capture="environment" hidden>
-  </div>
-
   <div class="actions">
     <button id="takeoff" title="Взліт / Сів">Взліт пішов</button>
     <div class="actbar">
@@ -1019,6 +1027,9 @@ Object.defineProperty(exports, '__esModule', { value: true });
       <button id="map" title="Карта">Карта</button>
       <button id="previewbtn" title="Перегляд звіту">Перегляд звіту</button>
       <button id="reset" class="muted" title="Скинути зміну">Скинути зміну</button>
+      <button id="voice" title="Голосове керування">Голос</button>
+      <button id="vhelp" title="Голосові команди">Команди</button>
+      <button id="vhelp" title="Голосові команди">Команди</button>
     </div>
   </div>
 
@@ -1099,12 +1110,50 @@ Object.defineProperty(exports, '__esModule', { value: true });
   </div>
 </div>
 
+<div id="vhelpbox" hidden>
+  <div class="card">
+    <div class="hh">Голосові команди</div>
+    <dl class="vcmds">
+      <dt>«Взліт» · «зліт» · «старт»</dt><dd>почати виліт (запуск таймера)</dd>
+      <dt>«Сів» · «посадка» · «стоп»</dt><dd>завершити виліт (посадка)</dd>
+      <dt>«Поділитися» · «надіслати»</dt><dd>надіслати звіт</dd>
+      <dt>«Копіювати»</dt><dd>скопіювати звіт у буфер</dd>
+      <dt>«Звіт» · «перегляд»</dt><dd>відкрити/сховати перегляд звіту</dd>
+      <dt>«Карта» · «мапа»</dt><dd>відкрити карту</dd>
+      <dt>«Скинути»</dt><dd>скинути зміну (скажіть двічі — підтвердження)</dd>
+      <dt>«Зараз» · «День» · «Ніч» · «Доба» · «Тиждень»</dt><dd>обрати режим звіту</dd>
+      <dt>«Коментар …»</dt><dd>додати продиктований коментар (текст після слова)</dd>
+    </dl>
+    <p class="vnote">Тапніть 🎤, дозвольте мікрофон і говоріть. Працює в Chrome/Android, потрібен інтернет. Розпізнане показується в рядку статусу.</p>
+    <button id="vhok">Зрозуміло</button>
+  </div>
+</div>
+
 <div id="update" hidden>
   <div id="upver">Доступне оновлення</div>
   <pre id="upnotes"></pre>
   <div class="uprow">
     <button id="upno">Пізніше</button>
     <button id="upyes">Оновити</button>
+  </div>
+</div>
+
+<div id="vhelpbox" hidden>
+  <div class="card">
+    <div class="hh">🎙 Голосові команди</div>
+    <ul class="vhlist">
+      <li><b>Взліт · зліт · старт</b> — почати виліт (таймер)</li>
+      <li><b>Сів · посадка · стоп</b> — посадка</li>
+      <li><b>Поділитися · надіслати</b> — надіслати звіт</li>
+      <li><b>Копіювати</b> — звіт у буфер обміну</li>
+      <li><b>Звіт · перегляд</b> — відкрити перегляд звіту</li>
+      <li><b>Карта · мапа</b> — відкрити карту</li>
+      <li><b>Скинути</b> (двічі) — скинути зміну</li>
+      <li><b>Зараз · День · Ніч · Доба · Тиждень</b> — режим звіту</li>
+      <li><b>Коментар …</b> — додати коментар (текст після слова). Напр.: «коментар коригування артилерії»</li>
+    </ul>
+    <p class="vhnote">🎤 Тапни мікрофон, дозволь доступ і говори. Працює в Chrome / Android, потрібен інтернет. Слухання безперервне — повторний тап вимикає.</p>
+    <button id="vhok">Зрозуміло</button>
   </div>
 </div>
 
@@ -1388,50 +1437,62 @@ Object.defineProperty(exports, '__esModule', { value: true });
     try { await navigator.clipboard.writeText(text); status('Текст скопійовано в буфер, вставте в Signal.', 'ok'); }
     catch (e) { status('Скопируйте текст вручную:\n\n' + text, 'err'); }
   }
-  // ---- необов'язкове вкладення фото/відео ----
-  let attachedFile = null, attachedURL = null;
-  function setAttached(f) {
-    attachedFile = f || null;
-    if (attachedURL) { URL.revokeObjectURL(attachedURL); attachedURL = null; }
-    const nameEl = $('#medianame'), prev = $('#mediaprev');
-    prev.innerHTML = '';
-    if (attachedFile) {
-      nameEl.hidden = false; nameEl.textContent = '📎 ' + attachedFile.name + '  ✕';
-      attachedURL = URL.createObjectURL(attachedFile);
-      if (attachedFile.type.startsWith('image/')) { const img = document.createElement('img'); img.src = attachedURL; prev.appendChild(img); prev.hidden = false; }
-      else if (attachedFile.type.startsWith('video/')) { const v = document.createElement('video'); v.src = attachedURL; v.controls = true; v.playsInline = true; prev.appendChild(v); prev.hidden = false; }
-      else { prev.hidden = true; }
-    } else { nameEl.hidden = true; nameEl.textContent = ''; prev.hidden = true; }
-  }
-  $('#mediafile').addEventListener('click', () => $('#mediainput').click());
-  $('#mediaphoto').addEventListener('click', () => $('#mediaphotoinput').click());
-  $('#mediavideo').addEventListener('click', () => $('#mediavideoinput').click());
-  $('#mediainput').addEventListener('change', e => setAttached(e.target.files[0]));
-  $('#mediaphotoinput').addEventListener('change', e => setAttached(e.target.files[0]));
-  $('#mediavideoinput').addEventListener('change', e => setAttached(e.target.files[0]));
-  $('#medianame').addEventListener('click', () => { setAttached(null); $('#mediainput').value = ''; $('#mediaphotoinput').value = ''; $('#mediavideoinput').value = ''; });
-
   async function share() {
     const text = reportText();
     if (navigator.share) {
       $('#share').disabled = true;
-      try {
-        if (attachedFile && navigator.canShare && navigator.canShare({ files: [attachedFile] })) {
-          await navigator.share({ files: [attachedFile], text });   // медіа + текст одним пакетом (без title, щоб не «з’їло» вкладення)
-          status('✓ Готово', 'ok');
-        } else if (attachedFile) {
-          await navigator.share({ text });
-          status('Текст надіслано. Це медіа не підтримується для прямого надсилання — додайте файл вручну.', 'dim');
-        } else {
-          await navigator.share({ title: $('#callsign').value.trim() || 'Звіт', text });
-          status('✓ Готово', 'ok');
-        }
-      }
+      try { await navigator.share({ title: $('#callsign').value.trim() || 'Звіт', text }); status('✓ Готово', 'ok'); }
       catch (e) { if (e && e.name === 'AbortError') status('Отменено', 'dim'); else await fallbackCopy(text); }
       finally { $('#share').disabled = false; }
     } else { await fallbackCopy(text); }
   }
   $('#share').addEventListener('click', share);
+
+  // ---- голосове керування (Web Speech API, uk-UA) ----
+  let recog = null, voiceOn = false;
+  function handleVoice(raw) {
+    const t = raw.toLowerCase().trim();
+    const has = (...ws) => ws.some(w => t.includes(w));
+    const mC = t.match(/^(?:коментар|комент|додай коментар|запиши|нотатка)\s+(.+)/);
+    if (mC) { const ta = $('#comments'); ta.value = (ta.value ? ta.value + '\n' : '') + mC[1]; ta.dispatchEvent(new Event('input')); status('🎙 Коментар додано', 'ok'); return; }
+    if (has('взліт', 'зліт', 'злет', 'старт', 'полетіли', 'вилітаю', 'поїхали')) { if (!flying) { takeoff(); status('🎙 Взліт', 'ok'); } else status('Вже в польоті', 'dim'); return; }
+    if (has('сів', 'посадка', 'приземл', 'сідаю', 'сел', 'стоп')) { if (flying) { landing(); status('🎙 Сів', 'ok'); } else status('Не в польоті', 'dim'); return; }
+    if (has('поділ', 'надісл', 'відправ', 'шер')) { status('🎙 Поділитися', 'ok'); share(); return; }
+    if (has('копі', 'скопі', 'буфер')) { status('🎙 Копіювати', 'ok'); copyText(); return; }
+    if (has('тиждень', 'сім днів', '7 днів')) { setMode('week'); status('Режим: 7 днів', 'ok'); return; }
+    if (has('доба', '24')) { setMode('shift'); status('Режим: Доба', 'ok'); return; }
+    if (has('ніч')) { setMode('night'); status('Режим: Ніч', 'ok'); return; }
+    if (has('день', 'денна')) { setMode('day'); status('Режим: День', 'ok'); return; }
+    if (has('зараз', 'поточн')) { setMode('current'); status('Режим: Зараз', 'ok'); return; }
+    if (has('перегляд', 'показати звіт', 'звіт')) { $('#previewbtn').click(); status('🎙 Перегляд звіту', 'ok'); return; }
+    if (has('карта', 'мапа')) { $('#map').click(); status('🎙 Карта', 'ok'); return; }
+    if (has('скинь', 'скинути', 'обнули')) { $('#reset').click(); return; }
+    status('Не розпізнано: ' + t, 'dim');
+  }
+  function initVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    const r = new SR();
+    r.lang = 'uk-UA'; r.continuous = true; r.interimResults = false; r.maxAlternatives = 1;
+    r.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) handleVoice(e.results[i][0].transcript); };
+    r.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { stopVoice(); status('Немає доступу до мікрофона', 'err'); } };
+    r.onend = () => { if (voiceOn) { try { r.start(); } catch (_) {} } };
+    return r;
+  }
+  function startVoice() {
+    if (!recog) recog = initVoice();
+    if (!recog) { status('Голос не підтримується цим браузером (потрібен Chrome)', 'err'); return; }
+    voiceOn = true; $('#voice').classList.add('on');
+    try { recog.start(); status('🎙 Слухаю: зліт · сів · звіт · карта · день/ніч/доба · коментар…', 'ok'); } catch (_) {}
+  }
+  function stopVoice() { voiceOn = false; $('#voice').classList.remove('on'); if (recog) { try { recog.stop(); } catch (_) {} } status('Голос вимкнено', 'dim'); }
+  $('#voice').addEventListener('click', () => voiceOn ? stopVoice() : startVoice());
+  $('#vhelp').addEventListener('click', () => { $('#vhelpbox').hidden = false; });
+  $('#vhok').addEventListener('click', () => { $('#vhelpbox').hidden = true; });
+  $('#vhelpbox').addEventListener('click', e => { if (e.target === $('#vhelpbox')) $('#vhelpbox').hidden = true; });
+  $('#vhelp').addEventListener('click', () => { $('#vhelpbox').hidden = false; });
+  $('#vhok').addEventListener('click', () => { $('#vhelpbox').hidden = true; });
+  $('#vhelpbox').addEventListener('click', e => { if (e.target === $('#vhelpbox')) $('#vhelpbox').hidden = true; });
 
   async function copyText() {
     const text = reportText();
