@@ -810,6 +810,8 @@ Object.defineProperty(exports, '__esModule', { value: true });
   .mbtn .mic { font-size:23px; line-height:1; }
   .mbtn .mlbl { font-size:11px; }
   #medianame { width:100%; text-align:center; font-size:12px; color:var(--ok); cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #mediaprev { width:100%; }
+  #mediaprev img, #mediaprev video { display:block; max-width:100%; max-height:200px; margin:8px auto 0; border-radius:4px; }
   .actions { margin-top:24px; display:flex; flex-direction:column; align-items:center; gap:18px; }
   .actions button { background:transparent; border:none; font-size:0; line-height:1; padding:8px; cursor:pointer; }
   .actions button::before { content:""; display:block; width:26px; height:26px; background-color:currentColor;
@@ -1004,6 +1006,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
     <button type="button" id="mediaphoto" class="mbtn"><span class="mic">📷</span><span class="mlbl">Фото</span></button>
     <button type="button" id="mediavideo" class="mbtn"><span class="mic">🎥</span><span class="mlbl">Відео</span></button>
     <span id="medianame" hidden></span>
+    <div id="mediaprev" hidden></div>
     <input type="file" id="mediainput" accept="image/*,video/*" hidden>
     <input type="file" id="mediaphotoinput" accept="image/*" capture="environment" hidden>
     <input type="file" id="mediavideoinput" accept="video/*" capture="environment" hidden>
@@ -1386,12 +1389,19 @@ Object.defineProperty(exports, '__esModule', { value: true });
     catch (e) { status('Скопируйте текст вручную:\n\n' + text, 'err'); }
   }
   // ---- необов'язкове вкладення фото/відео ----
-  let attachedFile = null;
+  let attachedFile = null, attachedURL = null;
   function setAttached(f) {
     attachedFile = f || null;
-    const el = $('#medianame');
-    if (attachedFile) { el.hidden = false; el.textContent = '📎 ' + attachedFile.name + '  ✕'; }
-    else { el.hidden = true; el.textContent = ''; }
+    if (attachedURL) { URL.revokeObjectURL(attachedURL); attachedURL = null; }
+    const nameEl = $('#medianame'), prev = $('#mediaprev');
+    prev.innerHTML = '';
+    if (attachedFile) {
+      nameEl.hidden = false; nameEl.textContent = '📎 ' + attachedFile.name + '  ✕';
+      attachedURL = URL.createObjectURL(attachedFile);
+      if (attachedFile.type.startsWith('image/')) { const img = document.createElement('img'); img.src = attachedURL; prev.appendChild(img); prev.hidden = false; }
+      else if (attachedFile.type.startsWith('video/')) { const v = document.createElement('video'); v.src = attachedURL; v.controls = true; v.playsInline = true; prev.appendChild(v); prev.hidden = false; }
+      else { prev.hidden = true; }
+    } else { nameEl.hidden = true; nameEl.textContent = ''; prev.hidden = true; }
   }
   $('#mediafile').addEventListener('click', () => $('#mediainput').click());
   $('#mediaphoto').addEventListener('click', () => $('#mediaphotoinput').click());
@@ -1406,14 +1416,16 @@ Object.defineProperty(exports, '__esModule', { value: true });
     if (navigator.share) {
       $('#share').disabled = true;
       try {
-        const data = { title: $('#callsign').value.trim() || 'Звіт', text };
-        let mediaDropped = false;
-        if (attachedFile) {
-          if (navigator.canShare && navigator.canShare({ files: [attachedFile] })) data.files = [attachedFile];
-          else mediaDropped = true;
+        if (attachedFile && navigator.canShare && navigator.canShare({ files: [attachedFile] })) {
+          await navigator.share({ files: [attachedFile], text });   // медіа + текст одним пакетом (без title, щоб не «з’їло» вкладення)
+          status('✓ Готово', 'ok');
+        } else if (attachedFile) {
+          await navigator.share({ text });
+          status('Текст надіслано. Це медіа не підтримується для прямого надсилання — додайте файл вручну.', 'dim');
+        } else {
+          await navigator.share({ title: $('#callsign').value.trim() || 'Звіт', text });
+          status('✓ Готово', 'ok');
         }
-        await navigator.share(data);
-        status(mediaDropped ? '✓ Текст надіслано (медіа додайте вручну)' : '✓ Готово', mediaDropped ? 'dim' : 'ok');
       }
       catch (e) { if (e && e.name === 'AbortError') status('Отменено', 'dim'); else await fallbackCopy(text); }
       finally { $('#share').disabled = false; }
