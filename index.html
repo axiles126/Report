@@ -838,19 +838,11 @@ Object.defineProperty(exports, '__esModule', { value: true });
   .vcmds dd { margin:2px 0 0; font-size:13px; color:var(--dim); }
   .vnote { font-size:12px; color:var(--dim); margin:16px 0 14px; line-height:1.5; }
   #vhelpbox #vhok { width:100%; border:none; background:transparent; font:inherit; font-weight:700; padding:12px; cursor:pointer; }
-  #vhelp::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%2210%22%2F%3E%3Cpath%20d%3D%22M9.09%209a3%203%200%200%201%205.83%201c0%202-3%203-3%203%22%2F%3E%3Cline%20x1%3D%2212%22%20y1%3D%2217%22%20x2%3D%2212.01%22%20y2%3D%2217%22%2F%3E%3C%2Fsvg%3E"); }
-  #vhelpbox { position:fixed; inset:0; z-index:2100; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:20px; }
-  #vhelpbox[hidden] { display:none; }
-  #vhelpbox .card { background:#fff; border:1px solid var(--line); max-width:430px; width:100%; padding:18px; max-height:85vh; overflow-y:auto; }
-  #vhelpbox .hh { font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-bottom:12px; }
-  .vhlist { list-style:none; padding:0; margin:0 0 12px; display:flex; flex-direction:column; gap:8px; font-size:13px; line-height:1.5; }
-  .vhlist b { font-weight:700; }
-  .vhnote { font-size:12px; color:var(--dim); margin:0 0 14px; line-height:1.5; }
   #vhok { width:100%; border:none; background:transparent; color:var(--fg); font:inherit; font-weight:700; padding:12px; cursor:pointer; }
   #install { position:fixed; top:max(6px, env(safe-area-inset-top)); right:max(8px, env(safe-area-inset-right));
              z-index:50; width:40px; height:40px; padding:0;
-             background:transparent; border:none; color:var(--fg); font-size:22px; line-height:40px;
-             text-align:center; cursor:pointer; }
+             background:transparent; border:none; color:var(--fg);
+             display:flex; align-items:center; justify-content:center; cursor:pointer; }
   #install[hidden] { display:none; }
   #preview { display:block; width:100%; min-height:170px; resize:vertical; font:inherit; font-size:13px;
              line-height:1.5; border:1px solid var(--line); padding:12px; margin-top:16px;
@@ -988,7 +980,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 </style>
 </head>
 <body>
-<button id="install" title="Встановити застосунок" hidden>⤓</button>
+<button id="install" title="Встановити застосунок" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 21h14"/></svg></button>
 <main>
   <button id="nametoggle" class="tpltoggle">Назва ▾</button>
   <div id="namebox" hidden>
@@ -1028,7 +1020,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
       <button id="previewbtn" title="Перегляд звіту">Перегляд звіту</button>
       <button id="reset" class="muted" title="Скинути зміну">Скинути зміну</button>
       <button id="voice" title="Голосове керування">Голос</button>
-      <button id="vhelp" title="Голосові команди">Команди</button>
       <button id="vhelp" title="Голосові команди">Команди</button>
     </div>
   </div>
@@ -1138,24 +1129,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
   </div>
 </div>
 
-<div id="vhelpbox" hidden>
-  <div class="card">
-    <div class="hh">🎙 Голосові команди</div>
-    <ul class="vhlist">
-      <li><b>Взліт · зліт · старт</b> — почати виліт (таймер)</li>
-      <li><b>Сів · посадка · стоп</b> — посадка</li>
-      <li><b>Поділитися · надіслати</b> — надіслати звіт</li>
-      <li><b>Копіювати</b> — звіт у буфер обміну</li>
-      <li><b>Звіт · перегляд</b> — відкрити перегляд звіту</li>
-      <li><b>Карта · мапа</b> — відкрити карту</li>
-      <li><b>Скинути</b> (двічі) — скинути зміну</li>
-      <li><b>Зараз · День · Ніч · Доба · Тиждень</b> — режим звіту</li>
-      <li><b>Коментар …</b> — додати коментар (текст після слова). Напр.: «коментар коригування артилерії»</li>
-    </ul>
-    <p class="vhnote">🎤 Тапни мікрофон, дозволь доступ і говори. Працює в Chrome / Android, потрібен інтернет. Слухання безперервне — повторний тап вимикає.</p>
-    <button id="vhok">Зрозуміло</button>
-  </div>
-</div>
 
 <div id="installhelp" hidden>
   <div class="card">
@@ -1469,27 +1442,31 @@ Object.defineProperty(exports, '__esModule', { value: true });
     if (has('скинь', 'скинути', 'обнули')) { $('#reset').click(); return; }
     status('Не розпізнано: ' + t, 'dim');
   }
-  function initVoice() {
+  function makeRecog() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return null;
     const r = new SR();
     r.lang = 'uk-UA'; r.continuous = true; r.interimResults = false; r.maxAlternatives = 1;
     r.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) handleVoice(e.results[i][0].transcript); };
-    r.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { stopVoice(); status('Немає доступу до мікрофона', 'err'); } };
-    r.onend = () => { if (voiceOn) { try { r.start(); } catch (_) {} } };
+    r.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { voiceOn = false; $('#voice').classList.remove('on'); status('Немає доступу до мікрофона', 'err'); } };
+    r.onend = () => { if (voiceOn) setTimeout(runRecog, 300); };   // авто-перезапуск свіжим екземпляром
     return r;
   }
-  function startVoice() {
-    if (!recog) recog = initVoice();
-    if (!recog) { status('Голос не підтримується цим браузером (потрібен Chrome)', 'err'); return; }
-    voiceOn = true; $('#voice').classList.add('on');
-    try { recog.start(); status('🎙 Слухаю: зліт · сів · звіт · карта · день/ніч/доба · коментар…', 'ok'); } catch (_) {}
+  function runRecog() {
+    if (!voiceOn) return;
+    recog = makeRecog();
+    if (!recog) { voiceOn = false; $('#voice').classList.remove('on'); status('Голос не підтримується (потрібен Chrome)', 'err'); return; }
+    try { recog.start(); } catch (_) { setTimeout(runRecog, 400); }
   }
-  function stopVoice() { voiceOn = false; $('#voice').classList.remove('on'); if (recog) { try { recog.stop(); } catch (_) {} } status('Голос вимкнено', 'dim'); }
+  function startVoice() {
+    if (voiceOn) return;
+    if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) { status('Голос не підтримується цим браузером (потрібен Chrome)', 'err'); return; }
+    voiceOn = true; $('#voice').classList.add('on');
+    status('🎙 Слухаю: зліт · сів · звіт · карта · день/ніч/доба · коментар…', 'ok');
+    runRecog();
+  }
+  function stopVoice() { voiceOn = false; $('#voice').classList.remove('on'); if (recog) { recog.onend = null; try { recog.stop(); } catch (_) {} } status('Голос вимкнено', 'dim'); }
   $('#voice').addEventListener('click', () => voiceOn ? stopVoice() : startVoice());
-  $('#vhelp').addEventListener('click', () => { $('#vhelpbox').hidden = false; });
-  $('#vhok').addEventListener('click', () => { $('#vhelpbox').hidden = true; });
-  $('#vhelpbox').addEventListener('click', e => { if (e.target === $('#vhelpbox')) $('#vhelpbox').hidden = true; });
   $('#vhelp').addEventListener('click', () => { $('#vhelpbox').hidden = false; });
   $('#vhok').addEventListener('click', () => { $('#vhelpbox').hidden = true; });
   $('#vhelpbox').addEventListener('click', e => { if (e.target === $('#vhelpbox')) $('#vhelpbox').hidden = true; });
