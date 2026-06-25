@@ -805,10 +805,11 @@ Object.defineProperty(exports, '__esModule', { value: true });
   .seg button { flex:1; padding:8px 3px; background:transparent; border:none; color:var(--dim);
                 font:inherit; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0; cursor:pointer; white-space:nowrap; }
   .seg button.on { color:var(--fg); font-weight:800; }
-  #mediarow { margin-top:18px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; }
-  #mediarow button { background:transparent; border:1px solid var(--line); color:var(--dim);
-                     font:inherit; font-size:12px; padding:8px 12px; cursor:pointer; }
-  #medianame { font-size:12px; color:var(--ok); cursor:pointer; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #mediarow { margin-top:18px; display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:center; gap:20px; }
+  .mbtn { background:transparent; border:none; padding:4px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--dim); }
+  .mbtn .mic { font-size:23px; line-height:1; }
+  .mbtn .mlbl { font-size:11px; }
+  #medianame { width:100%; text-align:center; font-size:12px; color:var(--ok); cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .actions { margin-top:24px; display:flex; flex-direction:column; align-items:center; gap:18px; }
   .actions button { background:transparent; border:none; font-size:0; line-height:1; padding:8px; cursor:pointer; }
   .actions button::before { content:""; display:block; width:26px; height:26px; background-color:currentColor;
@@ -999,11 +1000,13 @@ Object.defineProperty(exports, '__esModule', { value: true });
   </div>
 
   <div id="mediarow">
-    <button type="button" id="mediafile">📎 Фото/відео</button>
-    <button type="button" id="mediacam">📷 Камера</button>
+    <button type="button" id="mediafile" class="mbtn"><span class="mic">📎</span><span class="mlbl">Файл</span></button>
+    <button type="button" id="mediaphoto" class="mbtn"><span class="mic">📷</span><span class="mlbl">Фото</span></button>
+    <button type="button" id="mediavideo" class="mbtn"><span class="mic">🎥</span><span class="mlbl">Відео</span></button>
     <span id="medianame" hidden></span>
     <input type="file" id="mediainput" accept="image/*,video/*" hidden>
-    <input type="file" id="mediacaminput" accept="image/*,video/*" capture="environment" hidden>
+    <input type="file" id="mediaphotoinput" accept="image/*" capture="environment" hidden>
+    <input type="file" id="mediavideoinput" accept="video/*" capture="environment" hidden>
   </div>
 
   <div class="actions">
@@ -1391,10 +1394,12 @@ Object.defineProperty(exports, '__esModule', { value: true });
     else { el.hidden = true; el.textContent = ''; }
   }
   $('#mediafile').addEventListener('click', () => $('#mediainput').click());
-  $('#mediacam').addEventListener('click', () => $('#mediacaminput').click());
+  $('#mediaphoto').addEventListener('click', () => $('#mediaphotoinput').click());
+  $('#mediavideo').addEventListener('click', () => $('#mediavideoinput').click());
   $('#mediainput').addEventListener('change', e => setAttached(e.target.files[0]));
-  $('#mediacaminput').addEventListener('change', e => setAttached(e.target.files[0]));
-  $('#medianame').addEventListener('click', () => { setAttached(null); $('#mediainput').value = ''; $('#mediacaminput').value = ''; });
+  $('#mediaphotoinput').addEventListener('change', e => setAttached(e.target.files[0]));
+  $('#mediavideoinput').addEventListener('change', e => setAttached(e.target.files[0]));
+  $('#medianame').addEventListener('click', () => { setAttached(null); $('#mediainput').value = ''; $('#mediaphotoinput').value = ''; $('#mediavideoinput').value = ''; });
 
   async function share() {
     const text = reportText();
