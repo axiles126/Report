@@ -872,22 +872,22 @@ Object.defineProperty(exports, '__esModule', { value: true });
   .c3topL { display:flex; flex-direction:column; gap:2px; }
   .c3topR { display:flex; align-items:center; gap:4px; pointer-events:none; }
   #c3settings { pointer-events:auto; background:transparent; border:none; color:#dfe3e6; padding:2px 4px; cursor:pointer; display:flex; }
-  #c3setpanel { position:absolute; top:max(44px,calc(env(safe-area-inset-top) + 40px)); right:12px; z-index:3;
-                background:rgba(11,13,16,.95); color:#dfe3e6; padding:11px 13px; display:flex; flex-direction:column; gap:9px; font-size:13px; }
+  #c3setpanel { position:absolute; top:max(44px,calc(env(safe-area-inset-top) + 40px)); right:10px; left:auto; z-index:3;
+                width:min(330px, calc(100vw - 20px)); max-height:calc(100vh - 90px); overflow-y:auto;
+                background:rgba(11,13,16,.96); color:#dfe3e6; padding:12px 13px; display:flex; flex-direction:column; gap:12px; font-size:13px; }
   #c3setpanel[hidden] { display:none; }
-  #c3setpanel label { display:flex; align-items:center; gap:9px; cursor:pointer; }
+  .c3sec { display:flex; flex-direction:column; gap:9px; }
+  .c3cb { display:flex; align-items:center; gap:9px; cursor:pointer; }
   #c3setpanel input[type=checkbox] { width:17px; height:17px; accent-color:#7fd17f; }
-  .c3num { width:62px; background:transparent; border:1px solid #2c3238; color:#dfe3e6; font:inherit; font-size:12px; padding:3px 6px; }
-  #c3azunit { min-width:26px; color:#9aa3a8; }
+  .c3prow { display:flex; align-items:center; gap:8px; }
+  .c3lbl { min-width:64px; color:#9aa3a8; }
+  .c3u { min-width:30px; color:#9aa3a8; }
+  .c3prow input[type=range] { flex:1; accent-color:#c0392b; min-width:50px; }
+  .c3num { width:60px; background:transparent; border:1px solid #2c3238; color:#dfe3e6; font:inherit; font-size:12px; padding:3px 6px; }
+  .c3freqp { display:flex; gap:5px; }
+  .c3freqp button { background:transparent; border:1px solid #2c3238; color:#9aa3a8; font:inherit; font-size:11px; padding:3px 6px; cursor:pointer; }
   #c3back { font-size:14px; font-weight:700; color:#e8ecef; }
   #c3cov { font-size:12px; font-weight:600; color:#7fd6e0; }
-  #c3panel { position:absolute; left:0; right:0; bottom:0; z-index:2;
-             background:rgba(11,13,16,.92); color:#dfe3e6;
-             padding:12px 16px max(14px,env(safe-area-inset-bottom));
-             display:flex; flex-direction:column; gap:9px; font-size:12px; }
-  #c3panel label { display:flex; align-items:center; gap:10px; }
-  #c3panel label span { min-width:64px; color:#9aa3a8; }
-  #c3panel input[type=range] { flex:1; accent-color:#c0392b; }
   .c3row { display:flex; gap:10px; margin-top:2px; }
   .c3row button { flex:1; background:transparent; border:1px solid #2c3238; color:#dfe3e6;
                   padding:11px; font:inherit; font-size:12px; cursor:pointer; border-radius:0; }
@@ -1044,22 +1044,26 @@ Object.defineProperty(exports, '__esModule', { value: true });
     </div>
   </div>
   <div id="c3setpanel" hidden>
-    <label><input type="checkbox" id="cbCone" checked> Конус</label>
-    <label><input type="checkbox" id="cbBand" checked> Коридор висот</label>
-    <label><input type="checkbox" id="cbGrid" checked> Сітка</label>
-    <label><input type="checkbox" id="cbSky" checked> Зорі та сузір'я</label>
-    <label><input type="checkbox" id="cbMil"> Азимут у тисячних (0–6000)</label>
-  </div>
-  <div id="c3panel">
-    <label>Азимут <input type="number" id="c3aznum" class="c3num" min="0" max="359" step="1" value="0"><span id="c3azunit">°</span><input type="range" id="c3az" min="0" max="359" step="1" value="0"></label>
-    <label>Кут <span id="c3beamv">60</span>°<input type="range" id="c3beam" min="10" max="160" step="5" value="60"></label>
-    <label>Нахил <span id="c3elevv">0</span>°<input type="range" id="c3elev" min="-30" max="60" step="1" value="0"></label>
-    <label>Вис. ант. <span id="c3anthv">2 м</span><input type="range" id="c3anth" min="0" max="120" step="1" value="2"></label>
-    <label>Дальність <span id="c3rangev">120 м</span><input type="range" id="c3range" min="20" max="15000" step="50" value="120"></label>
+    <div class="c3sec">
+      <label class="c3cb"><input type="checkbox" id="cbCone" checked> Конус</label>
+      <label class="c3cb"><input type="checkbox" id="cbBand" checked> Коридор висот</label>
+      <label class="c3cb"><input type="checkbox" id="cbQual"> Якість сигналу (рельєф)</label>
+      <label class="c3cb"><input type="checkbox" id="cbGrid" checked> Сітка</label>
+      <label class="c3cb"><input type="checkbox" id="cbSky" checked> Зорі та сузір'я</label>
+      <label class="c3cb"><input type="checkbox" id="cbMil"> Азимут у тисячних (0–6000)</label>
+    </div>
+    <div class="c3sec">
+      <div class="c3prow"><span class="c3lbl">Азимут</span><input type="number" id="c3aznum" class="c3num" min="0" max="359" step="1" value="0"><span id="c3azunit" class="c3u">°</span><input type="range" id="c3az" min="0" max="359" step="1" value="0"></div>
+      <div class="c3prow"><span class="c3lbl">Кут</span><input type="number" id="c3beamnum" class="c3num" min="10" max="160" step="1" value="60"><span class="c3u">°</span><input type="range" id="c3beam" min="10" max="160" step="5" value="60"></div>
+      <div class="c3prow"><span class="c3lbl">Нахил</span><input type="number" id="c3elevnum" class="c3num" min="-30" max="60" step="1" value="0"><span class="c3u">°</span><input type="range" id="c3elev" min="-30" max="60" step="1" value="0"></div>
+      <div class="c3prow"><span class="c3lbl">Вис. ант.</span><input type="number" id="c3anthnum" class="c3num" min="0" max="120" step="1" value="2"><span class="c3u">м</span><input type="range" id="c3anth" min="0" max="120" step="1" value="2"></div>
+      <div class="c3prow"><span class="c3lbl">Частота</span><input type="number" id="c3freqnum" class="c3num" min="100" max="60000" step="10" placeholder="МГц"><span class="c3u">МГц</span><div class="c3freqp"><button data-f="915">915</button><button data-f="2400">2400</button><button data-f="5800">5800</button></div></div>
+      <div class="c3prow"><span class="c3lbl">Дальність</span><input type="number" id="c3rangenum" class="c3num" min="20" max="15000" step="10" value="120"><span class="c3u">м</span><input type="range" id="c3range" min="20" max="15000" step="50" value="120"></div>
+    </div>
     <div class="c3row">
       <button id="c3reset">Скинути вид</button>
       <button id="c3terr">Рельєф</button>
-      <button id="c3apply">Застосувати до мапи</button>
+      <button id="c3apply">Застосувати</button>
     </div>
   </div>
 </div>
@@ -1635,7 +1639,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
   let three3Ready=null;
   function loadThree3(){ return three3Ready || (three3Ready = window.THREE?Promise.resolve():loadScript3('https://unpkg.com/three@0.128.0/build/three.min.js')); }
   const state3 = { az:0, beam:60, elev:0, range:120, antH:2, yaw:0.7, pitch:0.9, dist:18,
-                   showCone:true, showBand:true, showGrid:true, showSky:true, azMil:false };
+                   showCone:true, showBand:true, showGrid:true, showSky:true, showQual:false, azMil:false };
   let t3 = null;
   const L3 = 9;
   function dir3(){ const a=state3.az*Math.PI/180, e=state3.elev*Math.PI/180;
@@ -1743,6 +1747,19 @@ Object.defineProperty(exports, '__esModule', { value: true });
     };
     buildHen(cCenter, 3.4, 'Велика курочка', 0.62);
     buildHen(cCenter.clone().add(cRight.clone().multiplyScalar(15)).add(cUp.clone().multiplyScalar(-7)), 1.7, 'Мала курочка', 0.4);
+    // сузір'я «Копібара» (силует за шаблоном іконки)
+    const capyPts=[[-1.7,0.25],[-1.25,0.7],[-0.95,1.0],[-0.55,0.8],[0.2,0.9],[1.1,0.7],[1.55,0.35],[1.25,-0.65],[0.35,-0.25],[-0.5,-0.65],[-1.45,-0.1],[-1.15,0.45]];
+    const capySeg=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,0],[3,10]];
+    const kDir=new THREE.Vector3(Math.sin(2.3),0,-Math.cos(2.3)).normalize();
+    const kCenter=kDir.clone().multiplyScalar(50).add(new THREE.Vector3(0,16,0));
+    const kRight=new THREE.Vector3().crossVectors(kDir, new THREE.Vector3(0,1,0)).normalize();
+    const kUp=new THREE.Vector3().crossVectors(kRight, kDir).normalize();
+    const KS=3.2, kv=capyPts.map(p=>kCenter.clone().add(kRight.clone().multiplyScalar(p[0]*KS)).add(kUp.clone().multiplyScalar(p[1]*KS)));
+    const kg=new THREE.BufferGeometry(); kg.setAttribute('position', new THREE.Float32BufferAttribute(kv.flatMap(q=>[q.x,q.y,q.z]),3));
+    sky.add(new THREE.Points(kg, new THREE.PointsMaterial({color:0xffe6b0, size:0.62, sizeAttenuation:true})));
+    const kl=[]; capySeg.forEach(([a,b])=>{ kl.push(kv[a],kv[b]); });
+    sky.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(kl), new THREE.LineBasicMaterial({color:0x9a8a6a, transparent:true, opacity:0.5})));
+    const kLbl=mkLabel('Копібара','#ffe6b0',34); kLbl.position.copy(kCenter.clone().add(kUp.clone().multiplyScalar(KS*1.7))); kLbl.scale.set(3.4,1.3,1); sky.add(kLbl);
     scene.add(sky);
     t3 = { renderer, scene, camera, mastH, mast, head, grid:gridRef, sky, cone:null, edges:null, bore:null, band:null, terrain:null, raf:null, target:new THREE.Vector3(0,0.4,0) };
     setupControls3(canvas);
@@ -1848,6 +1865,34 @@ Object.defineProperty(exports, '__esModule', { value: true });
     grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([apex, visEnd]), new THREE.LineBasicMaterial({color:0x7fd17f})));
     if(blocked){ const fullEnd=new THREE.Vector3(L3*gx, apex.y, L3*gz);
       grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([visEnd, fullEnd]), new THREE.LineBasicMaterial({color:0xc0392b, transparent:true, opacity:0.6}))); }
+    if(state3.showQual){
+      const half=Math.max(2,state3.beam/2), NS=Math.max(8,Math.round(state3.beam/2.5)), NRr=40, B=125;
+      const sq=d=>{ if(d<=0)return 1; if(fMHz<=0)return Math.max(0,1-d/range);
+        const fspl=20*Math.log10(d/1000)+20*Math.log10(fMHz)+32.44; return Math.max(0,Math.min(1,(B-fspl)/45)); };
+      const cpos=[], ccol=[], cidx=[];
+      for(let is=0; is<=NS; is++){
+        const aDeg=az-half+2*half*is/NS, ar=aDeg*Math.PI/180, dx=Math.sin(ar), dz=-Math.cos(ar);
+        let maxAng=-Infinity;
+        for(let ir=0; ir<=NRr; ir++){
+          const d=range*ir/NRr; let e,q;
+          if(ir===0){ e=g0; q=1; }
+          else { const p=destPoint(ll.lat,ll.lng,aDeg,d); e=(elevSync(p[0],p[1]) ?? g0);
+            const curv=d*d/(2*k*R), fres=lam>0?0.6*Math.sqrt(lam*d*Math.max(1,range-d)/range):0;
+            const angTgt=((e+tgtH-curv)-Hobs)/d, angTerr=((e+fres-curv)-Hobs)/d;
+            q = (angTgt>=maxAng) ? sq(d) : -1; if(angTerr>maxAng) maxAng=angTerr; }
+          cpos.push(d*u*dx, (e-g0)*u*vScale+0.03, d*u*dz);
+          const c = q<0 ? [0.16,0.16,0.18] : (q<0.5 ? [1,q*2,0] : [(1-q)*2,1,0]);
+          ccol.push(c[0],c[1],c[2]);
+        }
+      }
+      for(let is=0; is<NS; is++) for(let ir=0; ir<NRr; ir++){
+        const a0=is*(NRr+1)+ir, a1=a0+1, b0=(is+1)*(NRr+1)+ir, b1=b0+1; cidx.push(a0,b0,a1, a1,b0,b1); }
+      const cg=new THREE.BufferGeometry();
+      cg.setAttribute('position', new THREE.Float32BufferAttribute(cpos,3));
+      cg.setAttribute('color', new THREE.Float32BufferAttribute(ccol,3));
+      cg.setIndex(cidx); cg.computeVertexNormals();
+      grp.add(new THREE.Mesh(cg, new THREE.MeshBasicMaterial({ vertexColors:true, side:THREE.DoubleSide, transparent:true, opacity:0.6, depthWrite:false })));
+    }
     t3.terrain=grp; t3.scene.add(grp);
     rebuildCone3();
     $('#c3legend').textContent=(blocked?('Видимість: '+fmtLen(Math.round(reach))):'Пряма видимість на всю дальність')+(vScale>=1.5?(' · рельєф ×'+vScale.toFixed(0)):'');
@@ -1863,10 +1908,11 @@ Object.defineProperty(exports, '__esModule', { value: true });
     state3.beam=Math.round(coneHalf*2); state3.elev=0; state3.range=Math.round(currentConeR());
     state3.antH=Math.round(parseFloat($('#anth').value)||2); state3.terrain=false;
     $('#c3az').value=state3.az; updateAzUnit();
-    $('#c3beam').value=state3.beam; $('#c3beamv').textContent=state3.beam;
-    $('#c3elev').value=0; $('#c3elevv').textContent=0;
-    $('#c3anth').value=state3.antH; $('#c3anthv').textContent=fmtLen(state3.antH);
-    $('#c3range').value=Math.min(15000,state3.range); $('#c3rangev').textContent=fmtLen(state3.range);
+    $('#c3beam').value=state3.beam; $('#c3beamnum').value=state3.beam;
+    $('#c3elev').value=0; $('#c3elevnum').value=0;
+    $('#c3anth').value=state3.antH; $('#c3anthnum').value=state3.antH;
+    $('#c3range').value=Math.min(15000,state3.range); $('#c3rangenum').value=state3.range;
+    $('#c3freqnum').value=$('#antfreq').value||''; $('#cbQual').checked=state3.showQual;
     $('#c3terr').classList.remove('on'); $('#c3legend').textContent=DEF_LEGEND3;
     $('#c3setpanel').hidden=true; setBack3();
     clearTerrainMeshes(); applyMastSymbolic(); rebuildCone3(); applyVis3(); resize3();
@@ -1885,20 +1931,37 @@ Object.defineProperty(exports, '__esModule', { value: true });
   $('#cbGrid').addEventListener('change',()=>{ state3.showGrid=$('#cbGrid').checked; applyVis3(); });
   $('#cbSky').addEventListener('change',()=>{ state3.showSky=$('#cbSky').checked; applyVis3(); });
   $('#cbMil').addEventListener('change',()=>{ state3.azMil=$('#cbMil').checked; updateAzUnit(); });
-  $('#c3beam').addEventListener('input',()=>{ state3.beam=+$('#c3beam').value; $('#c3beamv').textContent=state3.beam; rebuildCone3(); });
-  $('#c3elev').addEventListener('input',()=>{ state3.elev=+$('#c3elev').value; $('#c3elevv').textContent=state3.elev; rebuildCone3(); });
-  $('#c3range').addEventListener('input',()=>{ state3.range=+$('#c3range').value; $('#c3rangev').textContent=fmtLen(state3.range); rebuildCone3(); });
+  const cl3=(v,a,b)=>Math.max(a,Math.min(b,Math.round(v)));
+  const setBeam=v=>{ if(isNaN(v))return; state3.beam=cl3(v,10,160); $('#c3beam').value=state3.beam; $('#c3beamnum').value=state3.beam; rebuildCone3(); };
+  const setElev=v=>{ if(isNaN(v))return; state3.elev=cl3(v,-30,60); $('#c3elev').value=state3.elev; $('#c3elevnum').value=state3.elev; rebuildCone3(); };
+  const setAnth=v=>{ if(isNaN(v))return; state3.antH=cl3(v,0,120); $('#c3anth').value=state3.antH; $('#c3anthnum').value=state3.antH; $('#anth').value=state3.antH; if(!state3.terrain) applyMastSymbolic(); };
+  const setRange=v=>{ if(isNaN(v))return; state3.range=cl3(v,20,15000); $('#c3range').value=Math.min(15000,state3.range); $('#c3rangenum').value=state3.range; rebuildCone3(); };
+  $('#c3beam').addEventListener('input',()=>setBeam(+$('#c3beam').value));
+  $('#c3beamnum').addEventListener('input',()=>setBeam(+$('#c3beamnum').value));
+  $('#c3elev').addEventListener('input',()=>setElev(+$('#c3elev').value));
+  $('#c3elevnum').addEventListener('input',()=>setElev(+$('#c3elevnum').value));
+  $('#c3anth').addEventListener('input',()=>setAnth(+$('#c3anth').value));
+  $('#c3anthnum').addEventListener('input',()=>setAnth(+$('#c3anthnum').value));
+  $('#c3range').addEventListener('input',()=>setRange(+$('#c3range').value));
+  $('#c3rangenum').addEventListener('input',()=>setRange(+$('#c3rangenum').value));
+  $('#c3freqnum').addEventListener('input',()=>{ $('#antfreq').value=$('#c3freqnum').value; rebuildCone3(); });
   $('#c3reset').addEventListener('click',()=>{ state3.yaw=0.7; state3.pitch=0.9; state3.dist=18; });
-  $('#c3anth').addEventListener('input',()=>{ state3.antH=+$('#c3anth').value; $('#c3anthv').textContent=fmtLen(state3.antH);
-    $('#anth').value=state3.antH; if(state3.terrain) buildTerrain3(); else applyMastSymbolic(); });
   $('#c3terr').addEventListener('click', async ()=>{
     state3.terrain=!state3.terrain; $('#c3terr').classList.toggle('on', state3.terrain);
     if(state3.terrain) await buildTerrain3();
     else { clearTerrainMeshes(); applyMastSymbolic(); $('#c3legend').textContent=DEF_LEGEND3; }
   });
-  $('#c3az').addEventListener('change',()=>{ if(state3.terrain) buildTerrain3(); });
-  $('#c3range').addEventListener('change',()=>{ if(state3.terrain) buildTerrain3(); });
-  document.querySelectorAll('.freqrow button').forEach(b=> b.addEventListener('click',()=>{ $('#antfreq').value=b.dataset.f; }));
+  $('#cbQual').addEventListener('change', async ()=>{
+    state3.showQual=$('#cbQual').checked;
+    if(state3.showQual && !state3.terrain){ state3.terrain=true; $('#c3terr').classList.add('on'); }
+    if(state3.terrain) await buildTerrain3();
+  });
+  ['c3az','c3beam','c3elev','c3anth','c3range','c3beamnum','c3elevnum','c3anthnum','c3rangenum','c3freqnum'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.addEventListener('change',()=>{ if(state3.terrain) buildTerrain3(); });
+  });
+  document.querySelectorAll('.c3freqp button, .freqrow button').forEach(b=> b.addEventListener('click',()=>{
+    $('#antfreq').value=b.dataset.f; const fn=document.getElementById('c3freqnum'); if(fn) fn.value=b.dataset.f;
+    if(state3.terrain) buildTerrain3(); else rebuildCone3(); }));
   $('#c3apply').addEventListener('click',()=>{
     coneMode='manual'; manualAz=((state3.az%360)+360)%360; coneHalf=Math.max(5,Math.round(state3.beam/2)); coneR=state3.range;
     store.set('kap_manualaz',String(manualAz)); idbSet('kap_manualaz',String(manualAz));
