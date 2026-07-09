@@ -810,9 +810,9 @@ Object.defineProperty(exports, '__esModule', { value: true });
   .actions button::before { content:""; display:block; width:26px; height:26px; background-color:currentColor;
                             -webkit-mask:var(--ic) center/contain no-repeat; mask:var(--ic) center/contain no-repeat; }
   #takeoff { padding:6px 28px; color:var(--ok); }
-  #takeoff::before { width:34px; height:34px; --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22black%22%3E%3Cpath%20d%3D%22M12%204l7%2014H5z%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E"); }
+  #takeoff::before { width:34px; height:34px; --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2019V5%22%2F%3E%3Cpath%20d%3D%22M7%2010l5-5%205%205%22%2F%3E%3Cpath%20d%3D%22M4%2022h16%22%2F%3E%3C%2Fsvg%3E"); }
   #takeoff.flying { color:var(--err); }
-  #takeoff.flying::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22black%22%3E%3Crect%20x%3D%225.5%22%20y%3D%225.5%22%20width%3D%2213%22%20height%3D%2213%22%20rx%3D%222.5%22%2F%3E%3C%2Fsvg%3E"); }
+  #takeoff.flying::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%203v14%22%2F%3E%3Cpath%20d%3D%22M7%2012l5%205%205-5%22%2F%3E%3Cpath%20d%3D%22M4%2022h16%22%2F%3E%3C%2Fsvg%3E"); }
   .actbar { display:flex; justify-content:center; align-items:center; gap:10px; flex-wrap:wrap; }
   .actbar button { width:54px; height:48px; }
   #share::before      { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%225%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2219%22%20r%3D%223%22%2F%3E%3Cline%20x1%3D%228.6%22%20y1%3D%2213.5%22%20x2%3D%2215.4%22%20y2%3D%2217.5%22%2F%3E%3Cline%20x1%3D%2215.4%22%20y1%3D%226.5%22%20x2%3D%228.6%22%20y2%3D%2210.5%22%2F%3E%3C%2Fsvg%3E"); }
@@ -821,6 +821,72 @@ Object.defineProperty(exports, '__esModule', { value: true });
   #reset { color:var(--dim); }
   #reset::before      { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M21%2012a9%209%200%201%201-2.64-6.36%22%2F%3E%3Cpath%20d%3D%22M21%203v6h-6%22%2F%3E%3C%2Fsvg%3E"); }
   #reset.confirm { color:var(--err); }
+  #editbtn::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2020h9%22%2F%3E%3Cpath%20d%3D%22M16.5%203.5a2.12%202.12%200%200%201%203%203L7%2019l-4%201%201-4Z%22%2F%3E%3C%2Fsvg%3E"); }
+  #editbtn.on { color:var(--ok); }
+  #guide { position:fixed; top:max(6px, env(safe-area-inset-top)); left:max(8px, env(safe-area-inset-left));
+           z-index:50; width:40px; height:40px; padding:0; background:transparent; border:none;
+           color:var(--fg); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  #guidebox { position:fixed; inset:0; z-index:2100; background:rgba(0,0,0,.45);
+              display:flex; align-items:center; justify-content:center; padding:20px; }
+  #guidebox[hidden] { display:none; }
+  #guidebox .card { background:#fff; border:1px solid var(--line); max-width:460px; width:100%;
+                    padding:20px; max-height:86vh; overflow-y:auto; }
+  #guidebox .hh { font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px; }
+  .gsec { margin:16px 0 4px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--dim); }
+  .gic { text-transform:none; letter-spacing:0; }
+  #guidebox p { margin:0 0 6px; font-size:13px; line-height:1.6; }
+  .gnote { margin-top:16px !important; font-size:11px !important; color:var(--dim); }
+  #guideok { width:100%; margin-top:14px; border:none; background:transparent; font:inherit; font-weight:700; padding:12px; cursor:pointer; }
+  #iconbox { position:fixed; inset:0; z-index:2100; background:rgba(0,0,0,.45);
+             display:flex; align-items:center; justify-content:center; padding:20px; }
+  #iconbox[hidden] { display:none; }
+  #iconbox .card { background:#fff; border:1px solid var(--line); max-width:420px; width:100%; padding:20px; }
+  #iconbox .hh { font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-bottom:14px; }
+  #icontoggle { position:fixed; top:max(6px, env(safe-area-inset-top));
+                right:calc(max(8px, env(safe-area-inset-right)) + 44px);
+                z-index:50; width:40px; height:40px; padding:0; background:transparent; border:none;
+                color:var(--fg); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  #icontoggle[hidden] { display:none; }
+  .iconrow { display:flex; align-items:center; gap:14px; }
+  #iconprev { border:1px solid var(--line); object-fit:cover; background:#fff; }
+  .iconbtns { display:flex; flex-direction:column; gap:7px; }
+  .iconbtns button { background:transparent; border:1px solid var(--line); color:var(--dim);
+                     font:inherit; font-size:12px; padding:8px 12px; cursor:pointer; }
+  .iconurl { display:flex; gap:7px; margin-top:14px; }
+  .iconurl input { flex:1; min-width:0; font:inherit; font-size:12px; padding:8px; border:1px solid var(--line); background:transparent; color:var(--fg); }
+  .iconurl button { background:transparent; border:1px solid var(--line); color:var(--dim); font:inherit; font-size:12px; padding:8px 11px; cursor:pointer; white-space:nowrap; }
+  .iconnote { font-size:11px; color:var(--dim); line-height:1.5; margin:12px 0 14px; }
+  #iconok { width:100%; border:none; background:transparent; font:inherit; font-weight:700; padding:12px; cursor:pointer; }
+  #editorbox { margin-top:18px; font-size:13px; }
+  #editorbox[hidden] { display:none; }
+  #editorbox input, #editorbox select, #editorbox textarea {
+    font:inherit; font-size:13px; padding:6px 7px; border:1px solid var(--line); background:transparent; color:var(--fg); }
+  .erow { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .erow .elbl { min-width:112px; color:var(--dim); font-size:12px; }
+  .erow input { flex:1; min-width:0; }
+  .ehead { margin:16px 0 8px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--dim); }
+  .eitem { border-top:1px solid var(--line); padding:10px 0; display:flex; flex-direction:column; gap:6px; }
+  .eline { display:flex; align-items:center; gap:8px; }
+  .eline input { flex:1; min-width:0; }
+  .eline input[type=time] { flex:0 0 auto; }
+  .edel { flex:0 0 auto; background:transparent; border:none; color:var(--err); font:inherit; font-size:15px; cursor:pointer; padding:2px 6px; }
+  .eadd { display:block; width:100%; margin-top:10px; background:transparent; border:1px dashed var(--line);
+          color:var(--dim); font:inherit; font-size:12px; padding:9px; cursor:pointer; }
+  .rdur { color:var(--dim); font-size:12px; white-space:nowrap; }
+  .rfld { display:flex; align-items:center; gap:8px; }
+  .rfld .rlbl { min-width:96px; color:var(--dim); font-size:12px; }
+  .rfld select, .rfld input { flex:1; min-width:0; }
+  .step { display:flex; align-items:center; gap:6px; }
+  .step button { background:transparent; border:1px solid var(--line); color:var(--fg); font:inherit;
+                 width:30px; height:30px; cursor:pointer; padding:0; }
+  .step span { min-width:24px; text-align:center; }
+  #fldpanel { padding:8px 0 4px; }
+  .flditem { display:flex; align-items:center; gap:8px; padding:5px 0; color:var(--dim); font-size:12px; }
+  .flditem b { color:var(--fg); font-weight:600; }
+  .fldnew { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
+  .fldnew input, .fldnew select { flex:1 1 110px; min-width:0; }
+  #fldadd { background:transparent; border:1px solid var(--line); color:var(--dim); font:inherit; font-size:12px; padding:7px 11px; cursor:pointer; }
+  #reclist .eitem textarea { width:100%; box-sizing:border-box; min-height:46px; resize:vertical; }
   #voice::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%222%22%20width%3D%226%22%20height%3D%2211%22%20rx%3D%223%22%2F%3E%3Cpath%20d%3D%22M5%2010a7%207%200%200%200%2014%200%22%2F%3E%3Cline%20x1%3D%2212%22%20y1%3D%2219%22%20x2%3D%2212%22%20y2%3D%2222%22%2F%3E%3Cline%20x1%3D%228%22%20y1%3D%2222%22%20x2%3D%2216%22%20y2%3D%2222%22%2F%3E%3C%2Fsvg%3E"); }
   #voice.on { color:var(--err); }
   #voice.on::before { animation:vpulse 1s ease-in-out infinite; }
@@ -986,6 +1052,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
   <div id="namebox" hidden>
     <label for="callsign">Назва</label>
     <input id="callsign" placeholder="Назва позиції" autocomplete="off" spellcheck="false">
+    <input id="leader" placeholder="Позивний старшого групи" autocomplete="off" spellcheck="false">
   </div>
 
   <div id="clock">00:00</div>
@@ -1018,6 +1085,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
       <button id="share" title="Поділитися">Поділитися</button>
       <button id="map" title="Карта">Карта</button>
       <button id="previewbtn" title="Перегляд звіту">Перегляд звіту</button>
+      <button id="editbtn" title="Редактор звіту">Редактор</button>
       <button id="reset" class="muted" title="Скинути зміну">Скинути зміну</button>
       <button id="voice" title="Голосове керування">Голос</button>
       <button id="vhelp" title="Голосові команди">Команди</button>
@@ -1027,6 +1095,42 @@ Object.defineProperty(exports, '__esModule', { value: true });
   <div id="previewbox" hidden>
     <textarea id="preview" spellcheck="false" placeholder="Звіт зʼявиться тут…"></textarea>
     <button id="copy">Скопіювати</button>
+  </div>
+
+  <div id="editorbox" hidden>
+    <div id="shiftbox" hidden>
+      <div class="erow"><span class="elbl">Початок зміни</span><input type="time" id="shiftstart"></div>
+      <div class="erow"><span class="elbl">Шифр району</span><input type="text" id="shiftcode" placeholder="напр. РУБАК"></div>
+      <div class="erow"><span class="elbl">Вильотів</span><input type="number" id="sortiecount" min="0" placeholder="авто"></div>
+      <div class="ehead">Події зміни</div>
+      <div id="evlist"></div>
+      <button type="button" id="evadd" class="eadd">+ Додати подію</button>
+      <datalist id="evhints">
+        <option value="корегування вампіра по укриттю противника"></option>
+        <option value="корегування фпв по укриттю противника"></option>
+        <option value="корегування артилерії"></option>
+        <option value="виявлено ціль противника"></option>
+      </datalist>
+    </div>
+
+    <div id="recwrap" hidden>
+      <button type="button" id="fldtoggle" class="tpltoggle">Поля вильоту ▾</button>
+      <div id="fldpanel" hidden>
+        <div id="fldlist"></div>
+        <div class="fldnew">
+          <input type="text" id="fldname" placeholder="Назва поля">
+          <select id="fldtype">
+            <option value="text">Текст</option>
+            <option value="number">Число</option>
+            <option value="select">Список</option>
+          </select>
+          <input type="text" id="fldopts" placeholder="Варіанти через кому" hidden>
+          <button type="button" id="fldadd">Додати поле</button>
+        </div>
+      </div>
+      <div id="reclist"></div>
+      <button type="button" id="recadd" class="eadd">+ Додати виліт</button>
+    </div>
   </div>
 
   <div id="status" class="dim">Відкриється системне вікно — оберіть Signal</div>
@@ -1130,6 +1234,58 @@ Object.defineProperty(exports, '__esModule', { value: true });
 </div>
 
 
+<button id="guide" title="Інструкція"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/></svg></button>
+
+<div id="guidebox" hidden>
+  <div class="card">
+    <div class="hh">Як скласти й надіслати звіт</div>
+
+    <div class="gsec">1 · Налаштування</div>
+    <p>Розгорніть <b>«Назва ▾»</b> та вкажіть назву позиції (напр. Капібара) і позивний старшого групи. Зберігається автоматично.</p>
+
+    <div class="gsec">2 · Фіксація вильотів</div>
+    <p>Тапніть <b>стрілку вгору</b> — почався виліт, таймер рахує час. Тапніть <b>стрілку вниз</b> — посадка. Коментар до вильоту введіть у полі або тапом по <b>шаблону</b> («Розвідка», «Коригування артилерії»…). Шаблони можна додавати та редагувати.</p>
+
+    <div class="gsec">3 · Режим звіту</div>
+    <p><b>Зараз</b> — поточний виліт. <b>День</b> (06:00–18:00) і <b>Ніч</b> (18:00–06:00). <b>Доба</b> — від початку зміни (типово 16:00) на 24 год. <b>7 днів</b> — тиждень із розбивкою по днях.</p>
+
+    <div class="gsec">4 · Редактор <span class="gic">✎</span></div>
+    <p>У режимі <b>Доба</b>: вкажіть початок зміни, шифр району, за потреби — ручну кількість вильотів. Додавайте <b>події</b> (час, опис, координати) — між ними автоматично підставляється «Ведення розвідки».</p>
+    <p>У режимах <b>День / Ніч / 7 днів</b>: правте час взльоту й посадки, коментарі, додавайте або видаляйте вильоти. У <b>«Поля вильоту ▾»</b> створіть власні поля (текст / число / список) — вони самі рахуються в підсумках.</p>
+
+    <div class="gsec">5 · Перегляд і надсилання</div>
+    <p>Тапніть <b>документ</b> — зʼявиться готовий текст. Його можна вручну виправити просто в полі. Далі <b>стрілка «поділитися»</b> — відкриється системне вікно, оберіть Signal. Або <b>копіювання</b> — текст ляже в буфер, вставте вручну.</p>
+
+    <div class="gsec">6 · Карта та координати</div>
+    <p>Кнопка <b>мітка</b> — карта. Тап по мапі ставить точку, <b>⚑</b> фіксує її. Тап по точці — назва, колір, лінійка, видалення. Координати MGRS підставляються в події звіту.</p>
+
+    <p class="gnote">Дані зберігаються лише на цьому пристрої (офлайн). Вильоти зберігаються 8 діб. «Скинути зміну» очищає список вильотів — натисніть двічі для підтвердження.</p>
+    <button id="guideok">Зрозуміло</button>
+  </div>
+</div>
+
+<button id="icontoggle" title="Іконка застосунку" hidden><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></button>
+
+<div id="iconbox" hidden>
+  <div class="card">
+    <div class="hh">Іконка застосунку</div>
+    <div class="iconrow">
+      <img id="iconprev" alt="Іконка" width="72" height="72">
+      <div class="iconbtns">
+        <button type="button" id="iconpick">З пристрою</button>
+        <button type="button" id="iconreset">Стандартна</button>
+      </div>
+    </div>
+    <div class="iconurl">
+      <input type="url" id="iconurl" placeholder="Або посилання на зображення (https://…)" autocomplete="off" spellcheck="false">
+      <button type="button" id="iconurlbtn">Завантажити</button>
+    </div>
+    <p class="iconnote">Зображення автоматично приводиться до потрібних розмірів (192 і 512 px). Оберіть іконку <b>до встановлення</b> — саме вона зʼявиться на робочому столі.</p>
+    <button id="iconok">Готово</button>
+    <input type="file" id="iconinput" accept="image/*" hidden>
+  </div>
+</div>
+
 <div id="installhelp" hidden>
   <div class="card">
     <div class="hh">Встановити застосунок</div>
@@ -1194,21 +1350,69 @@ Object.defineProperty(exports, '__esModule', { value: true });
     } catch (e) { return undefined; }
   }
 
-  // записи полётов: { t: timestamp, c: коментар }
+  // записи полётов: { t: timestamp, c: коментар, lt: посадка, x: {fieldId: value} }
   function loadFlights() {
     try {
       const arr = JSON.parse(store.get('kap_flights') || '[]');
-      return arr.map(x => typeof x === 'number' ? { t: x, c: '' } : { t: x.t, c: x.c || '', lt: x.lt });
+      return arr.map(normFlight);
     } catch (e) { return []; }
+  }
+  function normFlight(x) {
+    if (typeof x === 'number') return { t: x, c: '', x: {} };
+    return { t: x.t, c: x.c || '', lt: x.lt, x: (x.x && typeof x.x === 'object') ? x.x : {} };
   }
   let flights = loadFlights();
   let activeRec = null;   // полёт, к которому привязан комментарий (до следующего взльоту)
+
+  // ---- кастомні поля вильоту ----
+  function loadFields() {
+    try { const v = JSON.parse(store.get('kap_fields') || 'null'); if (Array.isArray(v)) return v; } catch (e) {}
+    return [];
+  }
+  let recFields = loadFields();
+  function saveFields() { store.set('kap_fields', JSON.stringify(recFields)); idbSet('kap_fields', recFields); }
+
+  // ---- події добової зміни ----
+  function loadEvents() {
+    try { const v = JSON.parse(store.get('kap_events') || 'null'); if (Array.isArray(v)) return v; } catch (e) {}
+    return [];
+  }
+  let events = loadEvents();
+  function saveEvents() {
+    const cut = Date.now() - 8 * DAY;
+    events = events.filter(e => e.t >= cut);
+    store.set('kap_events', JSON.stringify(events)); idbSet('kap_events', events);
+  }
+
+  // ---- налаштування зміни ----
+  let shiftStart = store.get('kap_shiftstart') || '16:00';
+  let shiftCode = store.get('kap_shiftcode') || '';
+  let sortieCount = store.get('kap_sorties') || '';
+  function saveShiftCfg() {
+    store.set('kap_shiftstart', shiftStart); idbSet('kap_shiftstart', shiftStart);
+    store.set('kap_shiftcode', shiftCode); idbSet('kap_shiftcode', shiftCode);
+    store.set('kap_sorties', sortieCount); idbSet('kap_sorties', sortieCount);
+  }
 
   function saveFlights() {
     const cut = Date.now() - 8 * DAY;   // зберігаємо 8 діб — для тижневого звіту
     flights = flights.filter(f => f.t >= cut);
     store.set('kap_flights', JSON.stringify(flights));
     idbSet('kap_flights', flights);
+  }
+  // межі періодів
+  function shiftBounds() {
+    const [sh, sm] = shiftStart.split(':').map(Number);
+    const now = new Date();
+    const s = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sh || 0, sm || 0, 0, 0);
+    if (now.getTime() < s.getTime()) s.setDate(s.getDate() - 1);
+    return [s.getTime(), s.getTime() + DAY];
+  }
+  function dayBounds() {
+    const now = new Date();
+    const s = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0, 0);
+    if (now.getHours() < 6) s.setDate(s.getDate() - 1);
+    return s.getTime();
   }
   function withinDays(n) { const cut = Date.now() - n * DAY; return flights.filter(f => f.t >= cut); }
   function within24() { return withinDays(1); }
@@ -1236,7 +1440,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
   function takeoff() {
     flying = true; startTs = Date.now(); takeoffStr = clockNow(); landingStr = ''; lastFlightMs = 0;
     $('#comments').value = '';                  // новый вылет — чистый комментарий
-    activeRec = { t: Date.now(), c: '' };        // создаём запись вылета
+    activeRec = { t: Date.now(), c: '', x: {} };        // создаём запись вылета
     flights.push(activeRec); saveFlights(); renderStats();
     $('#clock').classList.add('live');
     $('#takeoff').textContent = 'Сів';
@@ -1328,46 +1532,229 @@ Object.defineProperty(exports, '__esModule', { value: true });
   // ---- название и чекбокс (с запоминанием) ----
   const savedName = store.get('kap_name');
   if (savedName) $('#callsign').value = savedName;
+  const savedLeader = store.get('kap_leader');
+  if (savedLeader) $('#leader').value = savedLeader;
   function nameToggleLabel() {
     const open = !$('#namebox').hidden;
     const nm = $('#callsign').value.trim() || 'Назва';
-    $('#nametoggle').textContent = nm + (open ? ' ▴' : ' ▾');
+    const ld = $('#leader').value.trim();
+    $('#nametoggle').textContent = nm + (ld ? ' · ' + ld : '') + (open ? ' ▴' : ' ▾');
   }
   $('#nametoggle').addEventListener('click', () => { $('#namebox').hidden = !$('#namebox').hidden; nameToggleLabel(); });
   $('#callsign').addEventListener('input', () => { const v = $('#callsign').value; store.set('kap_name', v); idbSet('kap_name', v); nameToggleLabel(); });
+  $('#leader').addEventListener('input', () => { const v = $('#leader').value; store.set('kap_leader', v); idbSet('kap_leader', v); nameToggleLabel(); });
+
+  // ---- іконка застосунку (обирається до встановлення) ----
+  const DEF_ICON192 = 'icon-192.png', DEF_ICON512 = 'icon-512.png';
+  let customIcon = null;
+  try { const v = JSON.parse(store.get('kap_icon') || 'null'); if (v && v.i192 && v.i512) customIcon = v; } catch (e) {}
+
+  function squareIcon(img, size) {
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    const g = c.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, size, size);
+    const safe = size * 0.84;                              // безпечна зона для maskable
+    const k = Math.min(safe / img.width, safe / img.height);
+    const w = img.width * k, h = img.height * k;
+    g.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    return c.toDataURL('image/png');
+  }
+  function processIcon(file) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { try { res({ i192: squareIcon(img, 192), i512: squareIcon(img, 512) }); } catch (e) { rej(e); } finally { URL.revokeObjectURL(url); } };
+      img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
+      img.src = url;
+    });
+  }
+  let manifestBlobURL = null;
+  async function applyManifest() {
+    const link = document.querySelector('link[rel="manifest"]');
+    if (!link) return;
+    if (manifestBlobURL) { URL.revokeObjectURL(manifestBlobURL); manifestBlobURL = null; }
+    if (!customIcon) { link.href = 'manifest.webmanifest'; return; }
+    try {
+      const base = await (await fetch('manifest.webmanifest')).json();
+      base.icons = [
+        { src: customIcon.i192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: customIcon.i512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+      ];
+      manifestBlobURL = URL.createObjectURL(new Blob([JSON.stringify(base)], { type: 'application/manifest+json' }));
+      link.href = manifestBlobURL;
+    } catch (e) { link.href = 'manifest.webmanifest'; }
+  }
+  function applyIcon() {
+    const p = $('#iconprev'), apple = document.querySelector('link[rel="apple-touch-icon"]');
+    p.src = customIcon ? customIcon.i192 : DEF_ICON192;
+    if (apple) apple.href = customIcon ? customIcon.i192 : DEF_ICON192;
+    applyManifest();
+  }
+  function saveIcon() {
+    if (customIcon) { store.set('kap_icon', JSON.stringify(customIcon)); idbSet('kap_icon', customIcon); }
+    else { try { localStorage.removeItem('kap_icon'); } catch (e) {} idbSet('kap_icon', null); }
+  }
+  function imgFromURL(url) {   // спершу пряме завантаження, потім через fetch→blob
+    return new Promise((res, rej) => {
+      const img = new Image(); img.crossOrigin = 'anonymous';
+      img.onload = () => res(img);
+      img.onerror = async () => {
+        try {
+          const r = await fetch(url, { mode: 'cors' });
+          if (!r.ok) throw new Error('http');
+          const b = await r.blob();
+          const u = URL.createObjectURL(b), i2 = new Image();
+          i2.onload = () => { res(i2); URL.revokeObjectURL(u); };
+          i2.onerror = () => { URL.revokeObjectURL(u); rej(new Error('img')); };
+          i2.src = u;
+        } catch (e) { rej(e); }
+      };
+      img.src = url;
+    });
+  }
+  function setIconFromImg(img) {
+    customIcon = { i192: squareIcon(img, 192), i512: squareIcon(img, 512) };
+    saveIcon(); applyIcon();
+    status('✓ Іконку змінено. Встановіть застосунок, щоб вона зʼявилась.', 'ok');
+  }
+  $('#icontoggle').addEventListener('click', () => { $('#iconbox').hidden = false; });
+  $('#guide').addEventListener('click', () => { $('#guidebox').hidden = false; });
+  $('#guideok').addEventListener('click', () => { $('#guidebox').hidden = true; });
+  $('#guidebox').addEventListener('click', e => { if (e.target === $('#guidebox')) $('#guidebox').hidden = true; });
+  $('#iconok').addEventListener('click', () => { $('#iconbox').hidden = true; });
+  $('#iconbox').addEventListener('click', e => { if (e.target === $('#iconbox')) $('#iconbox').hidden = true; });
+  $('#iconpick').addEventListener('click', () => $('#iconinput').click());
+  $('#iconinput').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const ic = await processIcon(f); customIcon = ic; saveIcon(); applyIcon(); status('✓ Іконку змінено. Встановіть застосунок, щоб вона зʼявилась.', 'ok'); }
+    catch (_) { status('Не вдалося обробити зображення', 'err'); }
+    $('#iconinput').value = '';
+  });
+  $('#iconurlbtn').addEventListener('click', async () => {
+    const u = $('#iconurl').value.trim();
+    if (!u) { status('Вставте посилання на зображення', 'err'); return; }
+    $('#iconurlbtn').disabled = true;
+    try { setIconFromImg(await imgFromURL(u)); $('#iconurl').value = ''; }
+    catch (_) { status('Не вдалося завантажити (сайт може блокувати доступ). Збережіть файл і оберіть «З пристрою».', 'err'); }
+    finally { $('#iconurlbtn').disabled = false; }
+  });
+  $('#iconreset').addEventListener('click', () => { customIcon = null; saveIcon(); applyIcon(); status('Повернуто стандартну іконку', 'dim'); });
+  applyIcon();
   nameToggleLabel();
   let reportMode = store.get('kap_reportmode') || 'current';
   function setMode(m) {
     reportMode = m;
     store.set('kap_reportmode', m); idbSet('kap_reportmode', m);
     document.querySelectorAll('#reportmode button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+    if (typeof renderEditor === 'function' && !$('#editorbox').hidden) { renderEditor(); updatePreview(true); }
   }
   document.querySelectorAll('#reportmode button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
   setMode(reportMode);
 
   // ---- сборка текста ----
   function pad2(n) { return String(n).padStart(2, '0'); }
+  function fmtD(ts) { const d = new Date(ts); return pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(-2); }
+  function sameDate(a, b) { const x = new Date(a), y = new Date(b); return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); }
+  function tLabel(ts, base) { return (sameDate(ts, base) ? '' : fmtD(ts) + ' ') + hm(ts); }
+  function fieldsSuffix(f) {
+    const out = [];
+    for (const fd of recFields) {
+      const v = (f.x && f.x[fd.id] != null) ? String(f.x[fd.id]).trim() : '';
+      if (!v) continue;
+      if (fd.type === 'number' && (!Number(v) || Number(v) === 0)) continue;
+      out.push(fd.name + ': ' + v);
+    }
+    return out.length ? ' · ' + out.join(' · ') : '';
+  }
   function sortieLine(f) {
     const a = hm(f.t), b = f.lt ? hm(f.lt) : '…';
     const dur = f.lt ? ' (' + fmt(f.lt - f.t) + ')' : '';
     const tx = (f.c || '').trim().replace(/\n+/g, ', ');
-    return a + '–' + b + dur + (tx ? ' — ' + tx : '');
+    return a + '–' + b + dur + (tx ? ' — ' + tx : '') + fieldsSuffix(f);
   }
+  // підсумки за шаблонами коментарів
+  function tplTotals(list) {
+    const out = [];
+    for (const tpl of templates) {
+      const needle = tpl.toLowerCase().trim();
+      if (!needle) continue;
+      const n = list.filter(f => (f.c || '').toLowerCase().includes(needle)).length;
+      if (n > 0) out.push(tpl + ': ' + n);
+    }
+    return out;
+  }
+  // підсумки за кастомними полями
+  function fieldTotals(list) {
+    const out = [];
+    for (const fd of recFields) {
+      const vals = list.map(f => (f.x && f.x[fd.id] != null) ? String(f.x[fd.id]).trim() : '').filter(v => v !== '');
+      if (!vals.length) continue;
+      if (fd.type === 'number') {
+        const sum = vals.reduce((s, v) => s + (Number(v) || 0), 0);
+        if (sum > 0) out.push('Усього ' + fd.name + ': ' + sum);
+      } else if (fd.type === 'select') {
+        for (const opt of (fd.opts || [])) {
+          const n = vals.filter(v => v === opt).length;
+          if (n > 0) out.push(fd.name + ' — ' + opt + ': ' + n);
+        }
+      } else {
+        const m = new Map();
+        for (const v of vals) m.set(v, (m.get(v) || 0) + 1);
+        [...m.entries()].sort((a, b) => b[1] - a[1]).forEach(([v, n]) => out.push(fd.name + ' — ' + v + ': ' + n));
+      }
+    }
+    return out;
+  }
+  function totalsBlock(list) { return [...tplTotals(list), ...fieldTotals(list)]; }
+
   function buildText() {
     const name = $('#callsign').value.trim();
+    const leader = $('#leader').value.trim();
     const c = $('#comments').value.trim();
 
-    if (reportMode === 'day' || reportMode === 'night' || reportMode === 'shift') {
-      // межі доби: 06:00 поточної робочої доби (до 06:00 — попередня доба)
-      const now = new Date();
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0, 0);
-      if (now.getHours() < 6) start.setDate(start.getDate() - 1);
-      const s = start.getTime(), H = 3600e3;
-      const win = reportMode === 'day' ? [s, s + 12 * H] : reportMode === 'night' ? [s + 12 * H, s + 24 * H] : [s, s + 24 * H];
+    // ---- Доба: хронологія подій з інтервалами розвідки ----
+    if (reportMode === 'shift') {
+      const [s, e] = shiftBounds();
+      const within = flights.filter(f => f.t >= s && f.t < e);
+      const evs = events.filter(ev => ev.t >= s && ev.t < e).sort((a, b) => a.t - b.t);
+      const lines = [];
+      lines.push(fmtD(s) + ' - ' + fmtD(e));
+      lines.push(shiftStart + ' -' + shiftStart);
+      if (name) lines.push('СП ' + name + ':');
+      lines.push('Перелік подій та виявлених цілей' + (shiftCode ? ' ' + shiftCode : '') + ' в районі спостереження');
+      if (!evs.length) {
+        lines.push(tLabel(s, s) + '-' + tLabel(e, s) + '-Ведення розвідки');
+      } else {
+        let cur = s;
+        for (const ev of evs) {
+          if (ev.t > cur) lines.push(tLabel(cur, s) + '-' + tLabel(ev.t, s) + '-Ведення розвідки');
+          lines.push(tLabel(ev.t, s) + '-' + ev.text + (ev.mgrs ? ' за координатами ' + ev.mgrs : ''));
+          cur = ev.t + 60000;   // наступна хвилина
+        }
+        if (cur < e) lines.push(tLabel(cur, s) + '-' + tLabel(e, s) + '-Ведення розвідки');
+      }
+      lines.push('');
+      const cnt = (sortieCount !== '' && !isNaN(Number(sortieCount))) ? Number(sortieCount) : within.length;
+      lines.push('Під час добової зміни здійснено ' + cnt + ' вильотів');
+      totalsBlock(within).forEach(l => lines.push(l));
+      lines.push('Без втрат чи поранень серед особового складу СП ' + name.toUpperCase() + ':');
+      lines.push('Інформацію про події та виявлені цілі було передано оперативному черговому.');
+      if (leader) lines.push('Старший групи: ' + leader);
+      return lines.join('\n');
+    }
+
+    // ---- День / Ніч ----
+    if (reportMode === 'day' || reportMode === 'night') {
+      const s = dayBounds(), H = 3600e3;
+      const win = reportMode === 'day' ? [s, s + 12 * H] : [s + 12 * H, s + 24 * H];
       const within = flights.filter(f => f.t >= win[0] && f.t < win[1]).sort((a, b) => a.t - b.t);
-      const title = reportMode === 'day' ? 'Зміна день (06:00–18:00)' : reportMode === 'night' ? 'Зміна ніч (18:00–06:00)' : 'Зміна доба (24 год)';
-      const lines = [name ? title + ': ' + name : title, 'Вильотів: ' + within.length];
+      const title = reportMode === 'day' ? 'Зміна день (06:00–18:00)' : 'Зміна ніч (18:00–06:00)';
+      const lines = [name ? title + ': ' + name : title];
+      if (leader) lines.push('Старший групи: ' + leader);
+      lines.push('Вильотів: ' + within.length);
       for (const f of within) lines.push(sortieLine(f));
+      const tot = totalsBlock(within);
+      if (tot.length) { lines.push(''); tot.forEach(l => lines.push(l)); }
       if (c && !activeRec) lines.push(c);
       return lines.join('\n');
     }
@@ -1375,7 +1762,9 @@ Object.defineProperty(exports, '__esModule', { value: true });
     if (reportMode === 'week') {
       // тиждень: дні зі своїми вильотами (як добові зведення)
       const within = withinDays(7);
-      const lines = [name ? 'Тиждень: ' + name : 'Тиждень', 'Усього вилетів: ' + within.length];
+      const lines = [name ? 'Тиждень: ' + name : 'Тиждень'];
+      if (leader) lines.push('Старший групи: ' + leader);
+      lines.push('Усього вилетів: ' + within.length);
       const days = new Map();
       for (const f of within) {
         const d = new Date(f.lt || f.t);
@@ -1393,12 +1782,15 @@ Object.defineProperty(exports, '__esModule', { value: true });
         lines.push(pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1) + ' (' + wd + '): ' + arr.length);
         for (const f of arr) lines.push('  ' + sortieLine(f));
       }
+      const tot = totalsBlock(within);
+      if (tot.length) { lines.push(''); tot.forEach(l => lines.push(l)); }
       if (c && !activeRec) lines.push(c);
       return lines.join('\n');
     }
 
     const lines = [];
     if (name) lines.push(name);
+    if (leader) lines.push('Старший групи: ' + leader);
     if (takeoffStr)       lines.push('*Взліт*: ' + takeoffStr);
     if (c)                lines.push('Коментарі: ' + c);
     if (landingStr)       lines.push('*Сів*: ' + landingStr);
@@ -1483,8 +1875,9 @@ Object.defineProperty(exports, '__esModule', { value: true });
   function reportText() {
     return $('#previewbox').hidden ? buildText() : $('#preview').value;
   }
-  function updatePreview() {
-    if (previewEdited) return;                 // не затирати ручні правки
+  function updatePreview(force) {
+    if (previewEdited && !force) return;        // не затирати ручні правки
+    if (force) previewEdited = false;
     const t = buildText() || '';
     if ($('#preview').value !== t) $('#preview').value = t;
   }
@@ -1492,12 +1885,188 @@ Object.defineProperty(exports, '__esModule', { value: true });
   $('#previewbtn').addEventListener('click', () => {
     const box = $('#previewbox');
     box.hidden = !box.hidden;
-    $('#previewbtn').textContent = box.hidden ? 'Перегляд звіту' : 'Сховати звіт';
-    if (!box.hidden) { previewEdited = false; updatePreview(); }   // відкриваємо — підставляємо свіжий звіт
+    if (!box.hidden) { previewEdited = false; updatePreview(true); }   // відкриваємо — підставляємо свіжий звіт
   });
   // живе оновлення, поки перегляд відкритий і не редагувався вручну
   ['input', 'change', 'click'].forEach(ev =>
     document.addEventListener(ev, () => { if (!$('#previewbox').hidden) updatePreview(); }));
+
+  // ---- редактор звіту ----
+  function refreshReport() { saveFlights(); saveEvents(); renderStats(); updatePreview(true); }
+  function hhmm(ts) { const d = new Date(ts); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+  function tsFromTime(baseTs, val) {   // "HH:MM" на добі baseTs
+    const [h, m] = (val || '00:00').split(':').map(Number);
+    const d = new Date(baseTs);
+    d.setHours(h || 0, m || 0, 0, 0);
+    return d.getTime();
+  }
+  function recWindow() {
+    if (reportMode === 'shift') return shiftBounds();
+    const H = 3600e3, s = dayBounds();
+    if (reportMode === 'day') return [s, s + 12 * H];
+    if (reportMode === 'night') return [s + 12 * H, s + 24 * H];
+    return [Date.now() - 7 * DAY, Date.now() + DAY];   // тиждень
+  }
+  function uid() { return 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  // події зміни
+  function renderEvents() {
+    const [s, e] = shiftBounds();
+    const box = $('#evlist'); box.innerHTML = '';
+    const evs = events.filter(ev => ev.t >= s && ev.t < e).sort((a, b) => a.t - b.t);
+    evs.forEach(ev => {
+      const idx = events.indexOf(ev);
+      const it = document.createElement('div'); it.className = 'eitem';
+      const l1 = document.createElement('div'); l1.className = 'eline';
+      const tI = document.createElement('input'); tI.type = 'time'; tI.value = hhmm(ev.t);
+      const dI = document.createElement('input'); dI.type = 'text'; dI.value = ev.text || ''; dI.placeholder = 'Опис події'; dI.setAttribute('list', 'evhints');
+      const del = document.createElement('button'); del.className = 'edel'; del.textContent = '✕'; del.title = 'Видалити';
+      l1.append(tI, dI, del);
+      const l2 = document.createElement('div'); l2.className = 'eline';
+      const cI = document.createElement('input'); cI.type = 'text'; cI.value = ev.mgrs || ''; cI.placeholder = 'Координати (MGRS)';
+      l2.append(cI);
+      it.append(l1, l2); box.appendChild(it);
+
+      tI.addEventListener('change', () => {
+        let t = tsFromTime(s, tI.value);
+        if (t < s) t += DAY;                    // час після опівночі — другі доби зміни
+        events[idx].t = t; refreshReport(); renderEvents();
+      });
+      dI.addEventListener('input', () => { events[idx].text = dI.value; refreshReport(); });
+      cI.addEventListener('input', () => { events[idx].mgrs = cI.value.trim(); refreshReport(); });
+      del.addEventListener('click', () => { events.splice(idx, 1); refreshReport(); renderEvents(); });
+    });
+  }
+  function addEvent() {
+    const [s, e] = shiftBounds();
+    const now = Date.now();
+    events.push({ t: (now >= s && now < e) ? now : s, text: '', mgrs: pickedCoords || '' });
+    refreshReport(); renderEvents();
+  }
+
+  // поля вильоту
+  function renderFieldPanel() {
+    const box = $('#fldlist'); box.innerHTML = '';
+    recFields.forEach((fd, i) => {
+      const row = document.createElement('div'); row.className = 'flditem';
+      const t = fd.type === 'number' ? 'число' : fd.type === 'select' ? 'список' : 'текст';
+      const sp = document.createElement('span'); sp.innerHTML = '<b>' + fd.name + '</b> · ' + t + (fd.opts && fd.opts.length ? ' (' + fd.opts.join(', ') + ')' : '');
+      const del = document.createElement('button'); del.className = 'edel'; del.textContent = '✕';
+      del.addEventListener('click', () => { recFields.splice(i, 1); saveFields(); renderFieldPanel(); renderRecs(); updatePreview(true); });
+      row.append(sp, del); box.appendChild(row);
+    });
+  }
+  $('#fldtype').addEventListener('change', () => { $('#fldopts').hidden = $('#fldtype').value !== 'select'; });
+  $('#fldtoggle').addEventListener('click', () => {
+    const p = $('#fldpanel'); p.hidden = !p.hidden;
+    $('#fldtoggle').textContent = 'Поля вильоту ' + (p.hidden ? '▾' : '▴');
+  });
+  $('#fldadd').addEventListener('click', () => {
+    const name = $('#fldname').value.trim(); if (!name) return;
+    const type = $('#fldtype').value;
+    const opts = type === 'select' ? $('#fldopts').value.split(',').map(s => s.trim()).filter(Boolean) : [];
+    if (type === 'select' && !opts.length) { status('Вкажіть варіанти списку', 'err'); return; }
+    recFields.push({ id: uid(), name, type, opts });
+    saveFields(); $('#fldname').value = ''; $('#fldopts').value = '';
+    renderFieldPanel(); renderRecs(); updatePreview(true);
+  });
+
+  // записи вильотів
+  function renderRecs() {
+    const [ws, we] = recWindow();
+    const box = $('#reclist'); box.innerHTML = '';
+    const list = flights.filter(f => f.t >= ws && f.t < we).sort((a, b) => a.t - b.t);
+    list.forEach(f => {
+      const it = document.createElement('div'); it.className = 'eitem';
+      const l1 = document.createElement('div'); l1.className = 'eline';
+      const tI = document.createElement('input'); tI.type = 'time'; tI.value = hhmm(f.t);
+      const lI = document.createElement('input'); lI.type = 'time'; lI.value = f.lt ? hhmm(f.lt) : '';
+      const dur = document.createElement('span'); dur.className = 'rdur'; dur.textContent = f.lt ? fmt(f.lt - f.t) : '—';
+      const del = document.createElement('button'); del.className = 'edel'; del.textContent = '✕';
+      l1.append(tI, lI, dur, del);
+      const ta = document.createElement('textarea'); ta.value = f.c || ''; ta.placeholder = 'Коментар';
+      it.append(l1, ta);
+
+      for (const fd of recFields) {
+        const row = document.createElement('div'); row.className = 'rfld';
+        const lbl = document.createElement('span'); lbl.className = 'rlbl'; lbl.textContent = fd.name;
+        row.appendChild(lbl);
+        if (fd.type === 'select') {
+          const sel = document.createElement('select');
+          const o0 = document.createElement('option'); o0.value = ''; o0.textContent = '—'; sel.appendChild(o0);
+          (fd.opts || []).forEach(o => { const op = document.createElement('option'); op.value = o; op.textContent = o; sel.appendChild(op); });
+          sel.value = (f.x && f.x[fd.id]) || '';
+          sel.addEventListener('change', () => { f.x[fd.id] = sel.value; refreshReport(); });
+          row.appendChild(sel);
+        } else if (fd.type === 'number') {
+          const wrap = document.createElement('div'); wrap.className = 'step';
+          const minus = document.createElement('button'); minus.textContent = '−';
+          const val = document.createElement('span'); val.textContent = Number((f.x && f.x[fd.id]) || 0);
+          const plus = document.createElement('button'); plus.textContent = '+';
+          const upd = d => { const n = Math.max(0, Number(val.textContent) + d); val.textContent = n; f.x[fd.id] = n ? String(n) : ''; refreshReport(); };
+          minus.addEventListener('click', () => upd(-1));
+          plus.addEventListener('click', () => upd(1));
+          wrap.append(minus, val, plus); row.appendChild(wrap);
+        } else {
+          const inp = document.createElement('input'); inp.type = 'text'; inp.value = (f.x && f.x[fd.id]) || '';
+          inp.addEventListener('input', () => { f.x[fd.id] = inp.value; refreshReport(); });
+          row.appendChild(inp);
+        }
+        it.appendChild(row);
+      }
+      box.appendChild(it);
+
+      tI.addEventListener('change', () => { f.t = tsFromTime(f.t, tI.value); refreshReport(); renderRecs(); });
+      lI.addEventListener('change', () => {
+        if (!lI.value) { delete f.lt; } else {
+          let lt = tsFromTime(f.t, lI.value);
+          if (lt < f.t) lt += DAY;              // посадка після опівночі
+          f.lt = lt;
+        }
+        refreshReport(); renderRecs();
+      });
+      ta.addEventListener('input', () => { f.c = ta.value; refreshReport(); });
+      del.addEventListener('click', () => { const i = flights.indexOf(f); if (i >= 0) flights.splice(i, 1); refreshReport(); renderRecs(); });
+    });
+  }
+  function addRec() {
+    const [ws, we] = recWindow();
+    const now = Date.now();
+    flights.push({ t: (now >= ws && now < we) ? now : ws, c: '', x: {} });
+    refreshReport(); renderRecs();
+  }
+  $('#evadd').addEventListener('click', addEvent);
+  $('#recadd').addEventListener('click', addRec);
+
+  // налаштування зміни
+  $('#shiftstart').value = shiftStart;
+  $('#shiftcode').value = shiftCode;
+  $('#sortiecount').value = sortieCount;
+  $('#shiftstart').addEventListener('change', () => { shiftStart = $('#shiftstart').value || '16:00'; saveShiftCfg(); renderEditor(); updatePreview(true); });
+  $('#shiftcode').addEventListener('input', () => { shiftCode = $('#shiftcode').value.trim(); saveShiftCfg(); updatePreview(true); });
+  $('#sortiecount').addEventListener('input', () => { sortieCount = $('#sortiecount').value; saveShiftCfg(); updatePreview(true); });
+
+  function renderEditor() {
+    const shift = reportMode === 'shift';
+    $('#shiftbox').hidden = !shift;
+    $('#recwrap').hidden = shift;
+    if (shift) {
+      const [s, e] = shiftBounds();
+      $('#sortiecount').placeholder = 'авто: ' + flights.filter(f => f.t >= s && f.t < e).length;
+      renderEvents();
+    } else {
+      renderFieldPanel(); renderRecs();
+    }
+  }
+  $('#editbtn').addEventListener('click', () => {
+    const box = $('#editorbox');
+    box.hidden = !box.hidden;
+    $('#editbtn').classList.toggle('on', !box.hidden);
+    if (!box.hidden) {
+      if (reportMode === 'current') setMode('shift');
+      renderEditor(); updatePreview(true);
+    }
+  });
 
   // ---- карта: вибір координат тапом, підстановка в коментар ----
   function loadLeaflet() {
@@ -2287,9 +2856,9 @@ Object.defineProperty(exports, '__esModule', { value: true });
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   // показуємо кнопку всюди, де застосунок ще не запущено як встановлений
-  if (!isStandalone) $('#install').hidden = false;
+  if (!isStandalone) { $('#install').hidden = false; $('#icontoggle').hidden = false; }
 
-  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; $('#install').hidden = false; });
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; $('#install').hidden = false; $('#icontoggle').hidden = false; });
 
   $('#install').addEventListener('click', async () => {
     if (deferredPrompt) {                       // Chrome/Edge/Android — рідний діалог
@@ -2306,7 +2875,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
     $('#installhelp').hidden = false;
   });
   $('#hhok').addEventListener('click', () => { $('#installhelp').hidden = true; });
-  window.addEventListener('appinstalled', () => { $('#install').hidden = true; $('#installhelp').hidden = true; status('✓ Встановлено', 'ok'); });
+  window.addEventListener('appinstalled', () => { $('#install').hidden = true; $('#icontoggle').hidden = true; $('#iconbox').hidden = true; $('#installhelp').hidden = true; status('✓ Встановлено', 'ok'); });
 
   // ---- скидання зміни (подвійне натискання для підтвердження) ----
   let resetArmed = false, resetTimer = null;
@@ -2340,14 +2909,26 @@ Object.defineProperty(exports, '__esModule', { value: true });
     try {
       const [f, nm, rm] = await Promise.all([idbGet('kap_flights'), idbGet('kap_name'), idbGet('kap_reportmode')]);
       const tpl = await idbGet('kap_templates');
+      const [ld, fl, ev, ss, sc, so] = await Promise.all([
+        idbGet('kap_leader'), idbGet('kap_fields'), idbGet('kap_events'),
+        idbGet('kap_shiftstart'), idbGet('kap_shiftcode'), idbGet('kap_sorties')]);
       if (Array.isArray(f) && f.length >= flights.length) {
-        flights = f.map(x => ({ t: x.t, c: x.c || '', lt: x.lt }));
+        flights = f.map(normFlight);
       }
       if (Array.isArray(tpl) && !store.get('kap_templates')) { templates = tpl; renderTemplates(); }
       if (typeof nm === 'string' && !store.get('kap_name')) $('#callsign').value = nm;
+      if (typeof ld === 'string' && !store.get('kap_leader')) $('#leader').value = ld;
+      if (Array.isArray(fl) && !store.get('kap_fields')) recFields = fl;
+      if (Array.isArray(ev) && ev.length >= events.length) events = ev;
+      if (typeof ss === 'string' && !store.get('kap_shiftstart')) shiftStart = ss;
+      if (typeof sc === 'string' && !store.get('kap_shiftcode')) shiftCode = sc;
+      if (typeof so === 'string' && !store.get('kap_sorties')) sortieCount = so;
+      const ic = await idbGet('kap_icon');
+      if (ic && ic.i192 && ic.i512 && !store.get('kap_icon')) { customIcon = ic; applyIcon(); }
       if (typeof rm === 'string' && store.get('kap_reportmode') == null) setMode(rm);
     } catch (e) {}
-    nameToggleLabel(); saveFlights(); renderStats();
+    nameToggleLabel(); saveFlights(); saveEvents(); renderStats();
+    if (!$('#editorbox').hidden) renderEditor();
   })();
 
   saveFlights(); renderStats();
