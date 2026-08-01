@@ -1,0 +1,2968 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Reports">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" id="favicon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#ffffff">
+<title>Reports</title>
+<link rel="manifest" href="manifest.webmanifest">
+<script>
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(factory((global.mgrs = global.mgrs || {})));
+}(this, (function (exports) { 'use strict';
+
+/**
+ * UTM zones are grouped, and assigned to one of a group of 6
+ * sets.
+ *
+ * {int} @private
+ */
+var NUM_100K_SETS = 6;
+
+/**
+ * The column letters (for easting) of the lower left value, per
+ * set.
+ *
+ * {string} @private
+ */
+var SET_ORIGIN_COLUMN_LETTERS = 'AJSAJS';
+
+/**
+ * The row letters (for northing) of the lower left value, per
+ * set.
+ *
+ * {string} @private
+ */
+var SET_ORIGIN_ROW_LETTERS = 'AFAFAF';
+
+var A = 65; // A
+var I = 73; // I
+var O = 79; // O
+var V = 86; // V
+var Z = 90; // Z
+var mgrs = {
+  forward: forward,
+  inverse: inverse,
+  toPoint: toPoint
+};
+/**
+ * Conversion of lat/lon to MGRS.
+ *
+ * @param {object} ll Object literal with lat and lon properties on a
+ *     WGS84 ellipsoid.
+ * @param {int} accuracy Accuracy in digits (5 for 1 m, 4 for 10 m, 3 for
+ *      100 m, 2 for 1000 m or 1 for 10000 m). Optional, default is 5.
+ * @return {string} the MGRS string for the given location and accuracy.
+ */
+function forward(ll, accuracy) {
+  accuracy = accuracy || 5; // default accuracy 1m
+  return encode(LLtoUTM({
+    lat: ll[1],
+    lon: ll[0]
+  }), accuracy);
+}
+
+/**
+ * Conversion of MGRS to lat/lon.
+ *
+ * @param {string} mgrs MGRS string.
+ * @return {array} An array with left (longitude), bottom (latitude), right
+ *     (longitude) and top (latitude) values in WGS84, representing the
+ *     bounding box for the provided MGRS reference.
+ */
+function inverse(mgrs) {
+  var bbox = UTMtoLL(decode(mgrs.toUpperCase()));
+  if (bbox.lat && bbox.lon) {
+    return [bbox.lon, bbox.lat, bbox.lon, bbox.lat];
+  }
+  return [bbox.left, bbox.bottom, bbox.right, bbox.top];
+}
+
+function toPoint(mgrs) {
+  var bbox = UTMtoLL(decode(mgrs.toUpperCase()));
+  if (bbox.lat && bbox.lon) {
+    return [bbox.lon, bbox.lat];
+  }
+  return [(bbox.left + bbox.right) / 2, (bbox.top + bbox.bottom) / 2];
+}
+/**
+ * Conversion from degrees to radians.
+ *
+ * @private
+ * @param {number} deg the angle in degrees.
+ * @return {number} the angle in radians.
+ */
+function degToRad(deg) {
+  return (deg * (Math.PI / 180.0));
+}
+
+/**
+ * Conversion from radians to degrees.
+ *
+ * @private
+ * @param {number} rad the angle in radians.
+ * @return {number} the angle in degrees.
+ */
+function radToDeg(rad) {
+  return (180.0 * (rad / Math.PI));
+}
+
+/**
+ * Converts a set of Longitude and Latitude co-ordinates to UTM
+ * using the WGS84 ellipsoid.
+ *
+ * @private
+ * @param {object} ll Object literal with lat and lon properties
+ *     representing the WGS84 coordinate to be converted.
+ * @return {object} Object literal containing the UTM value with easting,
+ *     northing, zoneNumber and zoneLetter properties, and an optional
+ *     accuracy property in digits. Returns null if the conversion failed.
+ */
+function LLtoUTM(ll) {
+  var Lat = ll.lat;
+  var Long = ll.lon;
+  var a = 6378137.0; //ellip.radius;
+  var eccSquared = 0.00669438; //ellip.eccsq;
+  var k0 = 0.9996;
+  var LongOrigin;
+  var eccPrimeSquared;
+  var N, T, C, A, M;
+  var LatRad = degToRad(Lat);
+  var LongRad = degToRad(Long);
+  var LongOriginRad;
+  var ZoneNumber;
+  // (int)
+  ZoneNumber = Math.floor((Long + 180) / 6) + 1;
+
+  //Make sure the longitude 180.00 is in Zone 60
+  if (Long === 180) {
+    ZoneNumber = 60;
+  }
+
+  // Special zone for Norway
+  if (Lat >= 56.0 && Lat < 64.0 && Long >= 3.0 && Long < 12.0) {
+    ZoneNumber = 32;
+  }
+
+  // Special zones for Svalbard
+  if (Lat >= 72.0 && Lat < 84.0) {
+    if (Long >= 0.0 && Long < 9.0) {
+      ZoneNumber = 31;
+    }
+    else if (Long >= 9.0 && Long < 21.0) {
+      ZoneNumber = 33;
+    }
+    else if (Long >= 21.0 && Long < 33.0) {
+      ZoneNumber = 35;
+    }
+    else if (Long >= 33.0 && Long < 42.0) {
+      ZoneNumber = 37;
+    }
+  }
+
+  LongOrigin = (ZoneNumber - 1) * 6 - 180 + 3; //+3 puts origin
+  // in middle of
+  // zone
+  LongOriginRad = degToRad(LongOrigin);
+
+  eccPrimeSquared = (eccSquared) / (1 - eccSquared);
+
+  N = a / Math.sqrt(1 - eccSquared * Math.sin(LatRad) * Math.sin(LatRad));
+  T = Math.tan(LatRad) * Math.tan(LatRad);
+  C = eccPrimeSquared * Math.cos(LatRad) * Math.cos(LatRad);
+  A = Math.cos(LatRad) * (LongRad - LongOriginRad);
+
+  M = a * ((1 - eccSquared / 4 - 3 * eccSquared * eccSquared / 64 - 5 * eccSquared * eccSquared * eccSquared / 256) * LatRad - (3 * eccSquared / 8 + 3 * eccSquared * eccSquared / 32 + 45 * eccSquared * eccSquared * eccSquared / 1024) * Math.sin(2 * LatRad) + (15 * eccSquared * eccSquared / 256 + 45 * eccSquared * eccSquared * eccSquared / 1024) * Math.sin(4 * LatRad) - (35 * eccSquared * eccSquared * eccSquared / 3072) * Math.sin(6 * LatRad));
+
+  var UTMEasting = (k0 * N * (A + (1 - T + C) * A * A * A / 6.0 + (5 - 18 * T + T * T + 72 * C - 58 * eccPrimeSquared) * A * A * A * A * A / 120.0) + 500000.0);
+
+  var UTMNorthing = (k0 * (M + N * Math.tan(LatRad) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24.0 + (61 - 58 * T + T * T + 600 * C - 330 * eccPrimeSquared) * A * A * A * A * A * A / 720.0)));
+  if (Lat < 0.0) {
+    UTMNorthing += 10000000.0; //10000000 meter offset for
+    // southern hemisphere
+  }
+
+  return {
+    northing: Math.round(UTMNorthing),
+    easting: Math.round(UTMEasting),
+    zoneNumber: ZoneNumber,
+    zoneLetter: getLetterDesignator(Lat)
+  };
+}
+
+/**
+ * Converts UTM coords to lat/long, using the WGS84 ellipsoid. This is a convenience
+ * class where the Zone can be specified as a single string eg."60N" which
+ * is then broken down into the ZoneNumber and ZoneLetter.
+ *
+ * @private
+ * @param {object} utm An object literal with northing, easting, zoneNumber
+ *     and zoneLetter properties. If an optional accuracy property is
+ *     provided (in meters), a bounding box will be returned instead of
+ *     latitude and longitude.
+ * @return {object} An object literal containing either lat and lon values
+ *     (if no accuracy was provided), or top, right, bottom and left values
+ *     for the bounding box calculated according to the provided accuracy.
+ *     Returns null if the conversion failed.
+ */
+function UTMtoLL(utm) {
+
+  var UTMNorthing = utm.northing;
+  var UTMEasting = utm.easting;
+  var zoneLetter = utm.zoneLetter;
+  var zoneNumber = utm.zoneNumber;
+  // check the ZoneNummber is valid
+  if (zoneNumber < 0 || zoneNumber > 60) {
+    return null;
+  }
+
+  var k0 = 0.9996;
+  var a = 6378137.0; //ellip.radius;
+  var eccSquared = 0.00669438; //ellip.eccsq;
+  var eccPrimeSquared;
+  var e1 = (1 - Math.sqrt(1 - eccSquared)) / (1 + Math.sqrt(1 - eccSquared));
+  var N1, T1, C1, R1, D, M;
+  var LongOrigin;
+  var mu, phi1Rad;
+
+  // remove 500,000 meter offset for longitude
+  var x = UTMEasting - 500000.0;
+  var y = UTMNorthing;
+
+  // We must know somehow if we are in the Northern or Southern
+  // hemisphere, this is the only time we use the letter So even
+  // if the Zone letter isn't exactly correct it should indicate
+  // the hemisphere correctly
+  if (zoneLetter < 'N') {
+    y -= 10000000.0; // remove 10,000,000 meter offset used
+    // for southern hemisphere
+  }
+
+  // There are 60 zones with zone 1 being at West -180 to -174
+  LongOrigin = (zoneNumber - 1) * 6 - 180 + 3; // +3 puts origin
+  // in middle of
+  // zone
+
+  eccPrimeSquared = (eccSquared) / (1 - eccSquared);
+
+  M = y / k0;
+  mu = M / (a * (1 - eccSquared / 4 - 3 * eccSquared * eccSquared / 64 - 5 * eccSquared * eccSquared * eccSquared / 256));
+
+  phi1Rad = mu + (3 * e1 / 2 - 27 * e1 * e1 * e1 / 32) * Math.sin(2 * mu) + (21 * e1 * e1 / 16 - 55 * e1 * e1 * e1 * e1 / 32) * Math.sin(4 * mu) + (151 * e1 * e1 * e1 / 96) * Math.sin(6 * mu);
+  // double phi1 = ProjMath.radToDeg(phi1Rad);
+
+  N1 = a / Math.sqrt(1 - eccSquared * Math.sin(phi1Rad) * Math.sin(phi1Rad));
+  T1 = Math.tan(phi1Rad) * Math.tan(phi1Rad);
+  C1 = eccPrimeSquared * Math.cos(phi1Rad) * Math.cos(phi1Rad);
+  R1 = a * (1 - eccSquared) / Math.pow(1 - eccSquared * Math.sin(phi1Rad) * Math.sin(phi1Rad), 1.5);
+  D = x / (N1 * k0);
+
+  var lat = phi1Rad - (N1 * Math.tan(phi1Rad) / R1) * (D * D / 2 - (5 + 3 * T1 + 10 * C1 - 4 * C1 * C1 - 9 * eccPrimeSquared) * D * D * D * D / 24 + (61 + 90 * T1 + 298 * C1 + 45 * T1 * T1 - 252 * eccPrimeSquared - 3 * C1 * C1) * D * D * D * D * D * D / 720);
+  lat = radToDeg(lat);
+
+  var lon = (D - (1 + 2 * T1 + C1) * D * D * D / 6 + (5 - 2 * C1 + 28 * T1 - 3 * C1 * C1 + 8 * eccPrimeSquared + 24 * T1 * T1) * D * D * D * D * D / 120) / Math.cos(phi1Rad);
+  lon = LongOrigin + radToDeg(lon);
+
+  var result;
+  if (utm.accuracy) {
+    var topRight = UTMtoLL({
+      northing: utm.northing + utm.accuracy,
+      easting: utm.easting + utm.accuracy,
+      zoneLetter: utm.zoneLetter,
+      zoneNumber: utm.zoneNumber
+    });
+    result = {
+      top: topRight.lat,
+      right: topRight.lon,
+      bottom: lat,
+      left: lon
+    };
+  }
+  else {
+    result = {
+      lat: lat,
+      lon: lon
+    };
+  }
+  return result;
+}
+
+/**
+ * Calculates the MGRS letter designator for the given latitude.
+ *
+ * @private
+ * @param {number} lat The latitude in WGS84 to get the letter designator
+ *     for.
+ * @return {char} The letter designator.
+ */
+function getLetterDesignator(lat) {
+  //This is here as an error flag to show that the Latitude is
+  //outside MGRS limits
+  var LetterDesignator = 'Z';
+
+  if ((84 >= lat) && (lat >= 72)) {
+    LetterDesignator = 'X';
+  }
+  else if ((72 > lat) && (lat >= 64)) {
+    LetterDesignator = 'W';
+  }
+  else if ((64 > lat) && (lat >= 56)) {
+    LetterDesignator = 'V';
+  }
+  else if ((56 > lat) && (lat >= 48)) {
+    LetterDesignator = 'U';
+  }
+  else if ((48 > lat) && (lat >= 40)) {
+    LetterDesignator = 'T';
+  }
+  else if ((40 > lat) && (lat >= 32)) {
+    LetterDesignator = 'S';
+  }
+  else if ((32 > lat) && (lat >= 24)) {
+    LetterDesignator = 'R';
+  }
+  else if ((24 > lat) && (lat >= 16)) {
+    LetterDesignator = 'Q';
+  }
+  else if ((16 > lat) && (lat >= 8)) {
+    LetterDesignator = 'P';
+  }
+  else if ((8 > lat) && (lat >= 0)) {
+    LetterDesignator = 'N';
+  }
+  else if ((0 > lat) && (lat >= -8)) {
+    LetterDesignator = 'M';
+  }
+  else if ((-8 > lat) && (lat >= -16)) {
+    LetterDesignator = 'L';
+  }
+  else if ((-16 > lat) && (lat >= -24)) {
+    LetterDesignator = 'K';
+  }
+  else if ((-24 > lat) && (lat >= -32)) {
+    LetterDesignator = 'J';
+  }
+  else if ((-32 > lat) && (lat >= -40)) {
+    LetterDesignator = 'H';
+  }
+  else if ((-40 > lat) && (lat >= -48)) {
+    LetterDesignator = 'G';
+  }
+  else if ((-48 > lat) && (lat >= -56)) {
+    LetterDesignator = 'F';
+  }
+  else if ((-56 > lat) && (lat >= -64)) {
+    LetterDesignator = 'E';
+  }
+  else if ((-64 > lat) && (lat >= -72)) {
+    LetterDesignator = 'D';
+  }
+  else if ((-72 > lat) && (lat >= -80)) {
+    LetterDesignator = 'C';
+  }
+  return LetterDesignator;
+}
+
+/**
+ * Encodes a UTM location as MGRS string.
+ *
+ * @private
+ * @param {object} utm An object literal with easting, northing,
+ *     zoneLetter, zoneNumber
+ * @param {number} accuracy Accuracy in digits (1-5).
+ * @return {string} MGRS string for the given UTM location.
+ */
+function encode(utm, accuracy) {
+  // prepend with leading zeroes
+  var seasting = "00000" + utm.easting,
+    snorthing = "00000" + utm.northing;
+
+  return utm.zoneNumber + utm.zoneLetter + get100kID(utm.easting, utm.northing, utm.zoneNumber) + seasting.substr(seasting.length - 5, accuracy) + snorthing.substr(snorthing.length - 5, accuracy);
+}
+
+/**
+ * Get the two letter 100k designator for a given UTM easting,
+ * northing and zone number value.
+ *
+ * @private
+ * @param {number} easting
+ * @param {number} northing
+ * @param {number} zoneNumber
+ * @return the two letter 100k designator for the given UTM location.
+ */
+function get100kID(easting, northing, zoneNumber) {
+  var setParm = get100kSetForZone(zoneNumber);
+  var setColumn = Math.floor(easting / 100000);
+  var setRow = Math.floor(northing / 100000) % 20;
+  return getLetter100kID(setColumn, setRow, setParm);
+}
+
+/**
+ * Given a UTM zone number, figure out the MGRS 100K set it is in.
+ *
+ * @private
+ * @param {number} i An UTM zone number.
+ * @return {number} the 100k set the UTM zone is in.
+ */
+function get100kSetForZone(i) {
+  var setParm = i % NUM_100K_SETS;
+  if (setParm === 0) {
+    setParm = NUM_100K_SETS;
+  }
+
+  return setParm;
+}
+
+/**
+ * Get the two-letter MGRS 100k designator given information
+ * translated from the UTM northing, easting and zone number.
+ *
+ * @private
+ * @param {number} column the column index as it relates to the MGRS
+ *        100k set spreadsheet, created from the UTM easting.
+ *        Values are 1-8.
+ * @param {number} row the row index as it relates to the MGRS 100k set
+ *        spreadsheet, created from the UTM northing value. Values
+ *        are from 0-19.
+ * @param {number} parm the set block, as it relates to the MGRS 100k set
+ *        spreadsheet, created from the UTM zone. Values are from
+ *        1-60.
+ * @return two letter MGRS 100k code.
+ */
+function getLetter100kID(column, row, parm) {
+  // colOrigin and rowOrigin are the letters at the origin of the set
+  var index = parm - 1;
+  var colOrigin = SET_ORIGIN_COLUMN_LETTERS.charCodeAt(index);
+  var rowOrigin = SET_ORIGIN_ROW_LETTERS.charCodeAt(index);
+
+  // colInt and rowInt are the letters to build to return
+  var colInt = colOrigin + column - 1;
+  var rowInt = rowOrigin + row;
+  var rollover = false;
+
+  if (colInt > Z) {
+    colInt = colInt - Z + A - 1;
+    rollover = true;
+  }
+
+  if (colInt === I || (colOrigin < I && colInt > I) || ((colInt > I || colOrigin < I) && rollover)) {
+    colInt++;
+  }
+
+  if (colInt === O || (colOrigin < O && colInt > O) || ((colInt > O || colOrigin < O) && rollover)) {
+    colInt++;
+
+    if (colInt === I) {
+      colInt++;
+    }
+  }
+
+  if (colInt > Z) {
+    colInt = colInt - Z + A - 1;
+  }
+
+  if (rowInt > V) {
+    rowInt = rowInt - V + A - 1;
+    rollover = true;
+  }
+  else {
+    rollover = false;
+  }
+
+  if (((rowInt === I) || ((rowOrigin < I) && (rowInt > I))) || (((rowInt > I) || (rowOrigin < I)) && rollover)) {
+    rowInt++;
+  }
+
+  if (((rowInt === O) || ((rowOrigin < O) && (rowInt > O))) || (((rowInt > O) || (rowOrigin < O)) && rollover)) {
+    rowInt++;
+
+    if (rowInt === I) {
+      rowInt++;
+    }
+  }
+
+  if (rowInt > V) {
+    rowInt = rowInt - V + A - 1;
+  }
+
+  var twoLetter = String.fromCharCode(colInt) + String.fromCharCode(rowInt);
+  return twoLetter;
+}
+
+/**
+ * Decode the UTM parameters from a MGRS string.
+ *
+ * @private
+ * @param {string} mgrsString an UPPERCASE coordinate string is expected.
+ * @return {object} An object literal with easting, northing, zoneLetter,
+ *     zoneNumber and accuracy (in meters) properties.
+ */
+function decode(mgrsString) {
+
+  if (mgrsString && mgrsString.length === 0) {
+    throw ("MGRSPoint coverting from nothing");
+  }
+
+  var length = mgrsString.length;
+
+  var hunK = null;
+  var sb = "";
+  var testChar;
+  var i = 0;
+
+  // get Zone number
+  while (!(/[A-Z]/).test(testChar = mgrsString.charAt(i))) {
+    if (i >= 2) {
+      throw ("MGRSPoint bad conversion from: " + mgrsString);
+    }
+    sb += testChar;
+    i++;
+  }
+
+  var zoneNumber = parseInt(sb, 10);
+
+  if (i === 0 || i + 3 > length) {
+    // A good MGRS string has to be 4-5 digits long,
+    // ##AAA/#AAA at least.
+    throw ("MGRSPoint bad conversion from: " + mgrsString);
+  }
+
+  var zoneLetter = mgrsString.charAt(i++);
+
+  // Should we check the zone letter here? Why not.
+  if (zoneLetter <= 'A' || zoneLetter === 'B' || zoneLetter === 'Y' || zoneLetter >= 'Z' || zoneLetter === 'I' || zoneLetter === 'O') {
+    throw ("MGRSPoint zone letter " + zoneLetter + " not handled: " + mgrsString);
+  }
+
+  hunK = mgrsString.substring(i, i += 2);
+
+  var set = get100kSetForZone(zoneNumber);
+
+  var east100k = getEastingFromChar(hunK.charAt(0), set);
+  var north100k = getNorthingFromChar(hunK.charAt(1), set);
+
+  // We have a bug where the northing may be 2000000 too low.
+  // How
+  // do we know when to roll over?
+
+  while (north100k < getMinNorthing(zoneLetter)) {
+    north100k += 2000000;
+  }
+
+  // calculate the char index for easting/northing separator
+  var remainder = length - i;
+
+  if (remainder % 2 !== 0) {
+    throw ("MGRSPoint has to have an even number \nof digits after the zone letter and two 100km letters - front \nhalf for easting meters, second half for \nnorthing meters" + mgrsString);
+  }
+
+  var sep = remainder / 2;
+
+  var sepEasting = 0.0;
+  var sepNorthing = 0.0;
+  var accuracyBonus, sepEastingString, sepNorthingString, easting, northing;
+  if (sep > 0) {
+    accuracyBonus = 100000.0 / Math.pow(10, sep);
+    sepEastingString = mgrsString.substring(i, i + sep);
+    sepEasting = parseFloat(sepEastingString) * accuracyBonus;
+    sepNorthingString = mgrsString.substring(i + sep);
+    sepNorthing = parseFloat(sepNorthingString) * accuracyBonus;
+  }
+
+  easting = sepEasting + east100k;
+  northing = sepNorthing + north100k;
+
+  return {
+    easting: easting,
+    northing: northing,
+    zoneLetter: zoneLetter,
+    zoneNumber: zoneNumber,
+    accuracy: accuracyBonus
+  };
+}
+
+/**
+ * Given the first letter from a two-letter MGRS 100k zone, and given the
+ * MGRS table set for the zone number, figure out the easting value that
+ * should be added to the other, secondary easting value.
+ *
+ * @private
+ * @param {char} e The first letter from a two-letter MGRS 100´k zone.
+ * @param {number} set The MGRS table set for the zone number.
+ * @return {number} The easting value for the given letter and set.
+ */
+function getEastingFromChar(e, set) {
+  // colOrigin is the letter at the origin of the set for the
+  // column
+  var curCol = SET_ORIGIN_COLUMN_LETTERS.charCodeAt(set - 1);
+  var eastingValue = 100000.0;
+  var rewindMarker = false;
+
+  while (curCol !== e.charCodeAt(0)) {
+    curCol++;
+    if (curCol === I) {
+      curCol++;
+    }
+    if (curCol === O) {
+      curCol++;
+    }
+    if (curCol > Z) {
+      if (rewindMarker) {
+        throw ("Bad character: " + e);
+      }
+      curCol = A;
+      rewindMarker = true;
+    }
+    eastingValue += 100000.0;
+  }
+
+  return eastingValue;
+}
+
+/**
+ * Given the second letter from a two-letter MGRS 100k zone, and given the
+ * MGRS table set for the zone number, figure out the northing value that
+ * should be added to the other, secondary northing value. You have to
+ * remember that Northings are determined from the equator, and the vertical
+ * cycle of letters mean a 2000000 additional northing meters. This happens
+ * approx. every 18 degrees of latitude. This method does *NOT* count any
+ * additional northings. You have to figure out how many 2000000 meters need
+ * to be added for the zone letter of the MGRS coordinate.
+ *
+ * @private
+ * @param {char} n Second letter of the MGRS 100k zone
+ * @param {number} set The MGRS table set number, which is dependent on the
+ *     UTM zone number.
+ * @return {number} The northing value for the given letter and set.
+ */
+function getNorthingFromChar(n, set) {
+
+  if (n > 'V') {
+    throw ("MGRSPoint given invalid Northing " + n);
+  }
+
+  // rowOrigin is the letter at the origin of the set for the
+  // column
+  var curRow = SET_ORIGIN_ROW_LETTERS.charCodeAt(set - 1);
+  var northingValue = 0.0;
+  var rewindMarker = false;
+
+  while (curRow !== n.charCodeAt(0)) {
+    curRow++;
+    if (curRow === I) {
+      curRow++;
+    }
+    if (curRow === O) {
+      curRow++;
+    }
+    // fixing a bug making whole application hang in this loop
+    // when 'n' is a wrong character
+    if (curRow > V) {
+      if (rewindMarker) { // making sure that this loop ends
+        throw ("Bad character: " + n);
+      }
+      curRow = A;
+      rewindMarker = true;
+    }
+    northingValue += 100000.0;
+  }
+
+  return northingValue;
+}
+
+/**
+ * The function getMinNorthing returns the minimum northing value of a MGRS
+ * zone.
+ *
+ * Ported from Geotrans' c Lattitude_Band_Value structure table.
+ *
+ * @private
+ * @param {char} zoneLetter The MGRS zone to get the min northing for.
+ * @return {number}
+ */
+function getMinNorthing(zoneLetter) {
+  var northing;
+  switch (zoneLetter) {
+  case 'C':
+    northing = 1100000.0;
+    break;
+  case 'D':
+    northing = 2000000.0;
+    break;
+  case 'E':
+    northing = 2800000.0;
+    break;
+  case 'F':
+    northing = 3700000.0;
+    break;
+  case 'G':
+    northing = 4600000.0;
+    break;
+  case 'H':
+    northing = 5500000.0;
+    break;
+  case 'J':
+    northing = 6400000.0;
+    break;
+  case 'K':
+    northing = 7300000.0;
+    break;
+  case 'L':
+    northing = 8200000.0;
+    break;
+  case 'M':
+    northing = 9100000.0;
+    break;
+  case 'N':
+    northing = 0.0;
+    break;
+  case 'P':
+    northing = 800000.0;
+    break;
+  case 'Q':
+    northing = 1700000.0;
+    break;
+  case 'R':
+    northing = 2600000.0;
+    break;
+  case 'S':
+    northing = 3500000.0;
+    break;
+  case 'T':
+    northing = 4400000.0;
+    break;
+  case 'U':
+    northing = 5300000.0;
+    break;
+  case 'V':
+    northing = 6200000.0;
+    break;
+  case 'W':
+    northing = 7000000.0;
+    break;
+  case 'X':
+    northing = 7900000.0;
+    break;
+  default:
+    northing = -1.0;
+  }
+  if (northing >= 0.0) {
+    return northing;
+  }
+  else {
+    throw ("Invalid zone letter: " + zoneLetter);
+  }
+
+}
+
+exports['default'] = mgrs;
+exports.forward = forward;
+exports.inverse = inverse;
+exports.toPoint = toPoint;
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+})));
+
+</script>
+<style>
+  :root { --bg:#ffffff; --fg:#111111; --dim:#4f4f4f; --line:#dddddd; --ok:#1f7a1f; --err:#c0392b; }
+  #comments { display:none !important; }   /* поле коментарів приховане — працює лише у фоні */
+  * { box-sizing:border-box; }
+  html { overscroll-behavior:none; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:clamp(14px,3.6vw,16px)/1.55 "SF Mono","Courier New",monospace;
+         padding:clamp(16px,4vw,28px);
+         padding-top:max(clamp(16px,4vw,28px), env(safe-area-inset-top));
+         padding-right:max(clamp(16px,4vw,28px), env(safe-area-inset-right));
+         padding-bottom:max(clamp(16px,4vw,28px), env(safe-area-inset-bottom));
+         padding-left:max(clamp(16px,4vw,28px), env(safe-area-inset-left));
+         min-height:100dvh;
+         display:flex; justify-content:center; -webkit-text-size-adjust:100%; }
+  main { width:100%; max-width:560px; }
+  @media (min-width:700px) { main { max-width:620px; } }
+  /* альбомна орієнтація / низька висота — компактніше по вертикалі */
+  @media (orientation:landscape) and (max-height:560px) {
+    body { padding:8px clamp(14px,4vw,28px); }
+    #clock { font-size:clamp(24px,7vh,40px); margin:2px 0 2px; }
+    #stats { margin-top:2px; }
+    #flight { margin:2px 0; }
+    #tophud { margin-top:2px; }
+    .tplbar { margin:4px 0; }
+    .sep { margin:10px 0; }
+    #comments { min-height:52px; }
+    .actions { margin-top:12px; gap:10px; }
+  }
+  /* дуже вузькі екрани — трохи менші елементи */
+  @media (max-width:340px) {
+    .seg button { font-size:10px; padding:8px 1px; }
+    .tpl { font-size:12px; padding:5px 6px; }
+  }
+  .sep { border:0; border-top:1px solid var(--line); margin:24px 0; }
+  label { display:block; font-size:11px; color:var(--dim); margin:0 0 5px;
+          text-transform:uppercase; letter-spacing:1px; }
+  label.darklbl { color:#1a1a1a; font-weight:700; }
+  .airchk { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--dim); text-transform:none; letter-spacing:0; margin:10px 0 0; cursor:pointer; }
+  .airchk input { width:auto; flex:0 0 auto; }
+  input, textarea { width:100%; background:transparent; color:var(--fg);
+          border:1px solid var(--line); border-radius:0; padding:10px;
+          font:inherit; outline:none; }
+  input:focus, textarea:focus { border-color:#999; }
+  #callsign { font-weight:700; }
+  textarea { resize:vertical; min-height:100px; }
+  button { padding:14px; background:transparent; color:var(--fg); border:none;
+           font:inherit; font-weight:600; letter-spacing:1px; cursor:pointer;
+           text-transform:uppercase; }
+  button:active { opacity:.6; }
+  button:disabled { opacity:.4; cursor:default; }
+  #takeoff.flying { color:var(--err); }
+  .seg { display:flex; margin-top:16px; gap:6px; }
+  .seg button { flex:1; padding:8px 3px; background:transparent; border:none; color:var(--dim);
+                font:inherit; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0; cursor:pointer; white-space:nowrap; }
+  .seg button.on { color:var(--fg); font-weight:800; }
+  .actions { margin-top:24px; display:flex; flex-direction:column; align-items:center; gap:18px; }
+  .actions button { background:transparent; border:none; font-size:0; line-height:1; padding:8px; cursor:pointer; }
+  .actions button::before { content:""; display:block; width:26px; height:26px; background-color:currentColor;
+                            -webkit-mask:var(--ic) center/contain no-repeat; mask:var(--ic) center/contain no-repeat; }
+  #takeoff { background:transparent; border:none; font-size:0; line-height:1; padding:2px 0; color:var(--ok); cursor:pointer; }
+  #takeoff::before { content:""; display:block; width:42px; height:42px; background-color:currentColor;
+                     -webkit-mask:var(--ic) center/contain no-repeat; mask:var(--ic) center/contain no-repeat; --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M2%2022h20%22%2F%3E%3Cpath%20d%3D%22M6.36%2017.4%204%2017l-2-4%201.1-.55a2%202%200%200%201%201.8%200l.17.1a2%202%200%200%200%201.8%200L8%2012%205%206l.9-.45a2%202%200%200%201%202.09.2l4.02%203a2%202%200%200%200%202.1.2l4.19-2.06a2.41%202.41%200%200%201%201.73-.17L21%207a1.4%201.4%200%200%201%20.87%201.99l-.38.76c-.23.46-.6.84-1.07%201.08L7.58%2017.2a2%202%200%200%201-1.22.18z%22%2F%3E%3C%2Fsvg%3E"); }
+  #takeoff.flying { color:var(--err); }
+  #takeoff.flying::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M2%2022h20%22%2F%3E%3Cpath%20d%3D%22M3.77%2010.77%202%209l2-4.5%201.1.55c.55.28.9.84.9%201.45s.35%201.17.9%201.45L8%209.5l3-6%201.05.53a2%202%200%200%201%201.09%201.34l1.61%204.44a2%202%200%200%200%201.09%201.34l4.87%202.44c.75.37%201.29%201.06%201.49%201.87a1%201%200%200%201-1.23%201.21z%22%2F%3E%3C%2Fsvg%3E"); }
+  #tophud { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:2px; }
+  #tophud #reset { background:transparent; border:none; box-shadow:none; font-size:0; line-height:1;
+                   color:var(--dim); cursor:pointer; padding:8px; }
+  #tophud #reset::before { content:""; display:block; width:26px; height:26px; background-color:currentColor;
+                   -webkit-mask:var(--ic) center/contain no-repeat; mask:var(--ic) center/contain no-repeat; }
+  #tophud #reset.confirm { color:var(--err); }
+  .actbar { display:flex; justify-content:center; align-items:center; gap:10px; flex-wrap:wrap; }
+  .actbar button { width:54px; height:48px; }
+  #share::before      { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%225%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2219%22%20r%3D%223%22%2F%3E%3Cline%20x1%3D%228.6%22%20y1%3D%2213.5%22%20x2%3D%2215.4%22%20y2%3D%2217.5%22%2F%3E%3Cline%20x1%3D%2215.4%22%20y1%3D%226.5%22%20x2%3D%228.6%22%20y2%3D%2210.5%22%2F%3E%3C%2Fsvg%3E"); }
+  #previewbtn::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%225%22%20y%3D%223%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M8%208h8M8%2012h8M8%2016h5%22%2F%3E%3C%2Fsvg%3E"); }
+  #reset { color:var(--dim); }
+  #reset::before      { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M21%2012a9%209%200%201%201-2.64-6.36%22%2F%3E%3Cpath%20d%3D%22M21%203v6h-6%22%2F%3E%3C%2Fsvg%3E"); }
+  #reset.confirm { color:var(--err); }
+  #map::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2021s-7-6.3-7-12a7%207%200%200%201%2014%200c0%205.7-7%2012-7%2012z%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%229%22%20r%3D%222.5%22%2F%3E%3C%2Fsvg%3E"); }
+  #mapwrap { position:fixed; inset:0; width:100vw; height:100dvh; z-index:1000; background:#fff; }
+  #mapwrap[hidden] { display:none; }
+  #mapview { position:absolute; inset:0; }
+  @media (orientation:landscape) and (max-height:480px) {
+    #ptmenu, #ptpick { bottom:8px !important; padding:10px; }
+    #ptpick .pplist { max-height:34vh; }
+    #wxpanel { font-size:11px; max-width:55%; }
+    #mapctrl button { width:34px; height:34px; line-height:34px; font-size:19px; }
+  }
+  #mapview.gray .leaflet-tile-pane { filter:grayscale(1) contrast(1.05) brightness(1.03); }
+  #mapinfo { position:absolute; top:max(10px,env(safe-area-inset-top)); left:12px; z-index:1002;
+             color:#fff; font-size:12px; font-weight:700; pointer-events:none;
+             text-shadow:0 0 3px rgba(0,0,0,.9),0 1px 2px rgba(0,0,0,.9); }
+  #mapctrl { position:absolute; top:max(8px,env(safe-area-inset-top)); right:max(8px,env(safe-area-inset-right));
+             z-index:1002; display:flex; flex-direction:column; gap:6px; }
+  #mapctrl button { width:40px; height:40px; padding:0; background:transparent; border:none;
+                    color:#fff; font-size:22px; line-height:40px; cursor:pointer;
+                    text-shadow:0 0 4px rgba(0,0,0,.9),0 1px 2px rgba(0,0,0,.9); }
+  #mapctrl button:active { transform:scale(.9); }
+  #mapctrl #mapgps { font-size:17px; }                 /* ◎ візуально більший — вирівнюємо */
+  #mapctrl #mapcompass.on, #mapctrl #mapwx.on { color:#7ee787; }
+  /* схема (ч/б, світла) — темні написи замість білих */
+  #mapwrap.schema #wxpanel, #mapwrap.schema #mapinfo, #mapwrap.schema #mapctrl button {
+    color:#111; text-shadow:0 0 3px rgba(255,255,255,.95),0 1px 2px rgba(255,255,255,.9); }
+  #mapwrap.schema .leaflet-control-zoom a { color:#111 !important; text-shadow:0 0 3px rgba(255,255,255,.95); }
+  #mapwrap.schema #mapctrl #mapcompass.on, #mapwrap.schema #mapctrl #mapwx.on { color:#1f7a1f; }
+  #wxpanel { position:absolute; left:12px; bottom:max(12px,env(safe-area-inset-bottom));
+             z-index:1002; color:#fff; font-size:12px; line-height:1.45; max-width:70%;
+             text-shadow:0 0 3px rgba(0,0,0,.9),0 1px 2px rgba(0,0,0,.9); pointer-events:none; }
+  #wxpanel[hidden] { display:none; }
+  #wxpanel .wxtemp { font-size:22px; font-weight:800; }
+  #wxpanel .wxrow { display:flex; flex-wrap:wrap; gap:4px 12px; align-items:center; }
+  #wxpanel .wxi { display:flex; align-items:center; gap:4px; }
+  #wxpanel .wxarrow { display:inline-block; font-size:15px; transition:transform .3s; }
+  #wxpanel .wxsub { margin-top:2px; font-size:11px; opacity:.85; }
+  .leaflet-control-zoom { border:none !important; box-shadow:none !important; margin:12px !important; }
+  .leaflet-control-zoom a { background:transparent !important; border:none !important; color:#fff !important;
+                            text-shadow:0 0 4px rgba(0,0,0,.9),0 1px 2px rgba(0,0,0,.9); font-size:22px !important; font-weight:700 !important; }
+  .ptlabel { background:rgba(255,255,255,.92); border:none; box-shadow:0 1px 3px rgba(0,0,0,.3);
+             color:#111; font-family:inherit; font-size:11px; font-weight:600; padding:2px 6px; }
+  .ptlabel::before { display:none; }
+  #ptmenu { position:absolute; left:50%; bottom:20px; transform:translateX(-50%); z-index:1003;
+            width:min(320px,90%); background:#fff; border-radius:10px; box-shadow:0 3px 16px rgba(0,0,0,.35); padding:14px; }
+  #ptmenu #ptname { width:100%; box-sizing:border-box; font:inherit; font-size:14px; padding:8px; border:1px solid var(--line); border-radius:6px; }
+  #ptcolors { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+  #ptmenu .ptsw { width:28px; height:28px; border:2px solid rgba(0,0,0,.15); border-radius:50%; padding:0; cursor:pointer; }
+  #ptmenu .ptsw.sel { border-color:#111; box-shadow:0 0 0 2px #fff inset; }
+  #ptmgrs { font-size:12px; color:var(--dim); margin-bottom:12px; word-break:break-all; }
+  #ptbtns { display:flex; gap:8px; }
+  #ptbtns button { flex:1; font:inherit; font-size:13px; padding:9px 4px; border:1px solid var(--line); border-radius:6px; background:transparent; cursor:pointer; }
+  #ptbtns #ptdel { color:var(--err); }
+  #ptbtns #ptuse { color:var(--ok); font-weight:700; }
+  #ptpick { position:absolute; left:50%; bottom:20px; transform:translateX(-50%); z-index:1004;
+            width:min(340px,92%); background:#fff; border-radius:10px; box-shadow:0 3px 16px rgba(0,0,0,.35); padding:14px; }
+  #ptpick .pph { font-size:13px; font-weight:700; }
+  #ptpick .ppc { font-size:12px; color:var(--dim); margin:4px 0 10px; word-break:break-all; }
+  #ptpick .pplist { display:flex; flex-direction:column; gap:6px; max-height:42vh; overflow:auto; }
+  #ptpick .pplist button { font:inherit; font-size:13px; text-align:left; padding:9px 10px; border:1px solid var(--line);
+            border-radius:6px; background:transparent; cursor:pointer; }
+  #ptpick .pplist button.has { border-color:var(--ok); color:var(--ok); }
+  #ptpick .ppfoot { display:flex; gap:8px; margin-top:10px; }
+  #ptpick .ppfoot button { flex:1; font:inherit; font-size:13px; padding:9px 4px; border:1px solid var(--line);
+            border-radius:6px; background:transparent; cursor:pointer; }
+  #ptpick .ppfoot #ppall { color:var(--ok); font-weight:700; }
+  #editbtn::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%2020h9%22%2F%3E%3Cpath%20d%3D%22M16.5%203.5a2.12%202.12%200%200%201%203%203L7%2019l-4%201%201-4Z%22%2F%3E%3C%2Fsvg%3E"); }
+  #errbar { position:fixed; left:0; right:0; bottom:0; z-index:2000; background:#b3261e; color:#fff;
+            font:12px/1.45 inherit; padding:10px 12px; word-break:break-word; cursor:pointer;
+            box-shadow:0 -2px 10px rgba(0,0,0,.3); }
+  #errbar[hidden] { display:none; }
+  #wxhome { margin:6px 0 2px; font-size:12px; line-height:1.5; color:var(--dim); cursor:pointer;
+            display:flex; align-items:baseline; gap:7px; white-space:nowrap; overflow:hidden; }
+  #wxhome[hidden] { display:none; }
+  #wxhome .wxt { color:#111; font-weight:700; font-size:14px; flex:0 0 auto; }
+  #wxhome .wxd { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  #wxhome .wxf { flex:0 0 auto; }
+  #wxhome.msg { display:block; white-space:normal; overflow:visible; }
+  #wxhome.err { color:var(--err); display:block; white-space:normal; }
+  @media (max-width:340px) { #wxhome { font-size:11px; gap:5px; } }
+  #editbtn.on { color:var(--ok); }
+  #splash { position:fixed; inset:0; z-index:3000; background:var(--bg);
+            display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+            opacity:1; transition:opacity .45s ease; }
+  #splash.out { opacity:0; pointer-events:none; }
+  #splash[hidden] { display:none; }
+  #splashimg { width:min(46vw, 200px); height:auto; animation:spin 1.1s cubic-bezier(.2,.7,.2,1) both; }
+  #splashname { font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--dim); }
+  @keyframes spin { from { opacity:0; transform:scale(.86); } to { opacity:1; transform:scale(1); } }
+  @media (prefers-reduced-motion: reduce) { #splashimg { animation:none; } }
+  #guide { position:fixed; top:max(6px, env(safe-area-inset-top));
+           right:calc(max(8px, env(safe-area-inset-right)) + 88px); left:auto;
+           z-index:50; width:40px; height:40px; padding:0; background:transparent; border:none;
+           color:var(--fg); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  body.installed #guide { right:max(8px, env(safe-area-inset-right)); }
+  #guide { transition:right .25s ease; }
+  #guidebox { position:fixed; inset:0; z-index:2100; background:rgba(0,0,0,.45);
+              display:flex; align-items:center; justify-content:center; padding:20px; }
+  #guidebox[hidden] { display:none; }
+  #guidebox .card { background:#fff; border:1px solid var(--line); max-width:460px; width:100%;
+                    padding:20px; max-height:86vh; overflow-y:auto; }
+  #guidebox .hh { font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px; }
+  .gsec { margin:16px 0 4px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--dim); }
+  .gic { text-transform:none; letter-spacing:0; }
+  #guidebox p { margin:0 0 6px; font-size:13px; line-height:1.6; }
+  .gnote { margin-top:16px !important; font-size:11px !important; color:var(--dim); }
+  #guideok { width:100%; margin-top:14px; border:none; background:transparent; font:inherit; font-weight:700; padding:12px; cursor:pointer; }
+  #iconbox { position:fixed; inset:0; z-index:2100; background:rgba(0,0,0,.45);
+             display:flex; align-items:center; justify-content:center; padding:20px; }
+  #iconbox[hidden] { display:none; }
+  #iconbox .card { background:#fff; border:1px solid var(--line); max-width:420px; width:100%; padding:20px; }
+  #iconbox .hh { font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-bottom:14px; }
+  #icontoggle { position:fixed; top:max(6px, env(safe-area-inset-top));
+                right:calc(max(8px, env(safe-area-inset-right)) + 44px);
+                z-index:50; width:40px; height:40px; padding:0; background:transparent; border:none;
+                color:var(--fg); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  #icontoggle[hidden] { display:none; }
+  .iconrow { display:flex; align-items:center; gap:14px; }
+  #iconprev { border:1px solid var(--line); object-fit:cover; background:#fff; }
+  .iconbtns { display:flex; flex-direction:column; gap:7px; }
+  .iconbtns button { background:transparent; border:1px solid var(--line); color:var(--dim);
+                     font:inherit; font-size:12px; padding:8px 12px; cursor:pointer; }
+  .iconurl { display:flex; gap:7px; margin-top:14px; }
+  .iconurl input { flex:1; min-width:0; font:inherit; font-size:12px; padding:8px; border:1px solid var(--line); background:transparent; color:var(--fg); }
+  .iconurl button { background:transparent; border:1px solid var(--line); color:var(--dim); font:inherit; font-size:12px; padding:8px 11px; cursor:pointer; white-space:nowrap; }
+  .iconnote { font-size:11px; color:var(--dim); line-height:1.5; margin:12px 0 14px; }
+  #iconok { width:100%; border:none; background:transparent; font:inherit; font-weight:700; padding:12px; cursor:pointer; }
+  #editorbox { margin-top:18px; font-size:13px; }
+  #editorbox[hidden] { display:none; }
+  #editorbox input, #editorbox select, #editorbox textarea {
+    font:inherit; font-size:13px; padding:6px 7px; border:1px solid var(--line); background:transparent; color:var(--fg); }
+  .erow { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .erow .elbl { min-width:112px; color:var(--dim); font-size:12px; }
+  .erow input { flex:1; min-width:0; }
+  .ehead { margin:16px 0 8px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--dim); }
+  .eitem { border-top:1px solid var(--line); padding:10px 0; display:flex; flex-direction:column; gap:6px; }
+  .eline { display:flex; align-items:center; gap:8px; }
+  .eline input { flex:1; min-width:0; }
+  .eline input[type=time] { flex:0 0 auto; }
+  .eline .qty { flex:0 0 74px; }
+  .epick { flex:0 0 auto; background:transparent; border:none; font:inherit; font-size:11px; letter-spacing:0;
+           text-transform:none; color:var(--dim); cursor:pointer; padding:2px 4px; white-space:nowrap; }
+  .epick.on { color:var(--ok); font-weight:700; }
+  .edel { flex:0 0 auto; background:transparent; border:none; color:var(--err); font:inherit; font-size:15px; cursor:pointer; padding:2px 6px; }
+  .eadd { display:block; width:100%; margin-top:10px; background:transparent; border:1px dashed var(--line);
+          color:var(--dim); font:inherit; font-size:12px; padding:9px; cursor:pointer; }
+  .rdur { color:var(--dim); font-size:12px; white-space:nowrap; }
+  .ehint { color:var(--dim); font-size:11px; line-height:1.45; margin:2px 0 8px; }
+  .rfld { display:flex; align-items:center; gap:8px; }
+  .rfld .rlbl { min-width:96px; color:var(--dim); font-size:12px; }
+  .rfld select, .rfld input { flex:1; min-width:0; }
+  .step { display:flex; align-items:center; gap:6px; }
+  .step button { background:transparent; border:1px solid var(--line); color:var(--fg); font:inherit;
+                 width:30px; height:30px; cursor:pointer; padding:0; }
+  .step span { min-width:24px; text-align:center; }
+  #fldpanel { padding:8px 0 4px; }
+  .flditem { display:flex; align-items:center; gap:8px; padding:5px 0; color:var(--dim); font-size:12px; }
+  .flditem b { color:var(--fg); font-weight:600; }
+  .fldnew { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
+  .fldnew input, .fldnew select { flex:1 1 110px; min-width:0; }
+  #fldadd { background:transparent; border:1px solid var(--line); color:var(--dim); font:inherit; font-size:12px; padding:7px 11px; cursor:pointer; }
+  #reclist .eitem textarea { width:100%; box-sizing:border-box; min-height:46px; resize:vertical; }
+  #voice::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%222%22%20width%3D%226%22%20height%3D%2211%22%20rx%3D%223%22%2F%3E%3Cpath%20d%3D%22M5%2010a7%207%200%200%200%2014%200%22%2F%3E%3Cline%20x1%3D%2212%22%20y1%3D%2219%22%20x2%3D%2212%22%20y2%3D%2222%22%2F%3E%3Cline%20x1%3D%228%22%20y1%3D%2222%22%20x2%3D%2216%22%20y2%3D%2222%22%2F%3E%3C%2Fsvg%3E"); }
+  #voice.on { color:var(--err); }
+  #voice.on::before { animation:vpulse 1s ease-in-out infinite; }
+  @keyframes vpulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  #vhelp::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%2210%22%2F%3E%3Cpath%20d%3D%22M9.1%209a3%203%200%200%201%205.8%201c0%202-3%203-3%203%22%2F%3E%3Cline%20x1%3D%2212%22%20y1%3D%2217%22%20x2%3D%2212%22%20y2%3D%2217.01%22%2F%3E%3C%2Fsvg%3E"); }
+  #vhelpbox { position:fixed; inset:0; z-index:2100; background:rgba(0,0,0,.45);
+              display:flex; align-items:center; justify-content:center; padding:20px; }
+  #vhelpbox[hidden] { display:none; }
+  #vhelpbox .card { background:#fff; border:1px solid var(--line); max-width:440px; width:100%;
+                    padding:20px; max-height:85vh; overflow-y:auto; }
+  #vhelpbox .hh { font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-bottom:14px; }
+  .vcmds { margin:0; }
+  .vcmds dt { font-weight:700; font-size:13px; margin-top:10px; }
+  .vcmds dt:first-child { margin-top:0; }
+  .vcmds dd { margin:2px 0 0; font-size:13px; color:var(--dim); }
+  .vnote { font-size:12px; color:var(--dim); margin:16px 0 14px; line-height:1.5; }
+  #vhelpbox #vhok { width:100%; border:none; background:transparent; font:inherit; font-weight:700; padding:12px; cursor:pointer; }
+  #vhok { width:100%; border:none; background:transparent; color:var(--fg); font:inherit; font-weight:700; padding:12px; cursor:pointer; }
+  #install { position:fixed; top:max(6px, env(safe-area-inset-top)); right:max(8px, env(safe-area-inset-right));
+             z-index:50; width:40px; height:40px; padding:0;
+             background:transparent; border:none; color:var(--fg);
+             display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  #install[hidden] { display:none; }
+  #preview { display:block; width:100%; min-height:170px; resize:vertical; font:inherit; font-size:13px;
+             line-height:1.5; border:1px solid var(--line); padding:12px; margin-top:16px;
+             background:transparent; color:var(--fg); }
+  #previewbox[hidden] { display:none; }
+  #bigbox { position:fixed; inset:0; z-index:1500; background:var(--bg,#fff); display:flex; flex-direction:column; }
+  #bigbox[hidden] { display:none; }
+  #bighead { display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line); }
+  #bigtitle { font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+  #biginfo { flex:1; font-size:11px; color:var(--dim); }
+  #bigdone { font:inherit; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+             color:var(--ok); background:transparent; border:none; padding:6px 4px; cursor:pointer; }
+  #bigwrap { position:relative; flex:1; overflow:hidden; }
+  #biggutter { position:absolute; top:0; left:0; width:42px; bottom:0; overflow:hidden; z-index:2;
+               border-right:1px solid var(--line); background:rgba(0,0,0,.03); pointer-events:none; }
+  #biggutter div { font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:var(--dim);
+                   text-align:right; padding-right:8px; box-sizing:border-box; }
+  #bigta, #bigmirror { font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+                       padding:10px 12px 10px 52px; box-sizing:border-box; white-space:pre-wrap;
+                       word-break:break-word; overflow-wrap:break-word; border:none; }
+  #bigta { position:absolute; inset:0; width:100%; height:100%; resize:none; background:transparent;
+           color:var(--fg); outline:none; -webkit-text-size-adjust:100%; }
+  #bigmirror { position:absolute; top:0; left:0; right:0; visibility:hidden; pointer-events:none; z-index:-1; }
+  #previewbox #copy { display:block; margin:12px auto 0; padding:8px 18px; border:none; font-size:0; line-height:1; }
+  #copy::before { content:""; display:block; width:28px; height:28px; background-color:currentColor;
+                  -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%229%22%20width%3D%2211%22%20height%3D%2211%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M5%2015H4a1%201%200%200%201-1-1V4a1%201%200%200%201%201-1h10a1%201%200%200%201%201%201v1%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%229%22%20width%3D%2211%22%20height%3D%2211%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M5%2015H4a1%201%200%200%201-1-1V4a1%201%200%200%201%201-1h10a1%201%200%200%201%201%201v1%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; }
+  #clock { font-size:clamp(28px,9vw,44px); line-height:1; letter-spacing:1px; text-align:center;
+           margin:8px 0 4px; font-variant-numeric:tabular-nums; }
+  #clock.live { color:var(--ok); }
+  #flight { text-align:center; font-size:12px; color:var(--dim);
+            white-space:pre-line; min-height:16px; }
+  #stats { text-align:center; font-size:11px; color:var(--fg); margin:8px 0 0;
+           text-transform:uppercase; letter-spacing:1px; }
+  .check { display:flex; align-items:center; gap:9px; margin-top:16px;
+           font-size:12px; color:var(--fg); cursor:pointer; user-select:none; }
+  .check input { width:17px; height:17px; accent-color:#111; margin:0; }
+  .tplbar { display:flex; flex-direction:column; align-items:center; gap:6px; margin:6px 0 8px; }
+  .tpls { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px 10px; width:100%; }
+  .tpls[hidden] { display:none; }
+  #tpltoggle.open::before { background-color:var(--ok); }
+  #tpltoggle.open { background:rgba(31,122,31,.10); border-radius:8px; }
+  .tpl { font:inherit; font-size:13px; font-weight:700; letter-spacing:0; text-transform:none;
+         padding:6px 8px; margin:0; border:none; background:transparent;
+         color:var(--fg); cursor:pointer; }
+  .tpl { -webkit-tap-highlight-color:transparent; outline:none; box-shadow:none; }
+  .tpl:active { opacity:.5; }
+  .tpl.add, .tpl.edit { color:var(--dim); font-size:22px; padding:2px 10px; }
+  .tpls.editing .tpl:not(.add):not(.edit) { color:var(--err); }
+  .tpladd { display:flex; flex-direction:column; gap:8px; margin:0 0 10px; }
+  .tpladd[hidden] { display:none; }
+  .tplicons { display:flex; align-items:center; justify-content:center; gap:18px; }
+  #tplshare { font-size:0; padding:6px 0; -webkit-tap-highlight-color:transparent; outline:none; }
+  #copy { font-size:0; padding:6px 0; -webkit-tap-highlight-color:transparent; outline:none; }
+  #copy::before { content:""; display:inline-block; width:22px; height:22px; background-color:var(--dim);
+                  -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%229%22%20width%3D%2211%22%20height%3D%2211%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M5%2015H4a2%202%200%200%201-2-2V4a2%202%200%200%201%202-2h9a2%202%200%200%201%202%202v1%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%229%22%20width%3D%2211%22%20height%3D%2211%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M5%2015H4a2%202%200%200%201-2-2V4a2%202%200%200%201%202-2h9a2%202%200%200%201%202%202v1%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; }
+  #copy:active { opacity:.5; }
+  #tplshare::before { content:""; display:inline-block; width:22px; height:22px; background-color:var(--dim);
+                      -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%225%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2219%22%20r%3D%223%22%2F%3E%3Cline%20x1%3D%228.6%22%20y1%3D%2213.5%22%20x2%3D%2215.4%22%20y2%3D%2217.5%22%2F%3E%3Cline%20x1%3D%2215.4%22%20y1%3D%226.5%22%20x2%3D%228.6%22%20y2%3D%2210.5%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%225%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2219%22%20r%3D%223%22%2F%3E%3Cline%20x1%3D%228.6%22%20y1%3D%2213.5%22%20x2%3D%2215.4%22%20y2%3D%2217.5%22%2F%3E%3Cline%20x1%3D%2215.4%22%20y1%3D%226.5%22%20x2%3D%228.6%22%20y2%3D%2210.5%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; }
+  #tplshare:active { opacity:.5; }
+  .tplnewrow { display:flex; gap:8px; }
+  .tpladd input { flex:1; }
+  .tplnewrow button { padding:6px 12px; }
+  .tpltoggle { font:inherit; font-size:12px; font-weight:700; text-transform:none; letter-spacing:0;
+               padding:4px 0; margin:0 0 8px; border:none; background:transparent;
+               color:var(--dim); cursor:pointer; }
+  #tpltoggle { font-size:0; padding:6px 0; -webkit-tap-highlight-color:transparent; outline:none; }
+  #tpltoggle::before { content:""; display:inline-block; width:24px; height:24px; background-color:var(--dim);
+                       -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2011V4a1%201%200%200%201%201-1h7l9%209a2%202%200%200%201%200%202.8l-6.2%206.2a2%202%200%200%201-2.8%200L3%2012a1%201%200%200%201-.3-1z%22%2F%3E%3Ccircle%20cx%3D%227.5%22%20cy%3D%227.5%22%20r%3D%221.4%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2011V4a1%201%200%200%201%201-1h7l9%209a2%202%200%200%201%200%202.8l-6.2%206.2a2%202%200%200%201-2.8%200L3%2012a1%201%200%200%201-.3-1z%22%2F%3E%3Ccircle%20cx%3D%227.5%22%20cy%3D%227.5%22%20r%3D%221.4%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; }
+  #status { margin-top:16px; font-size:12px; min-height:18px; white-space:pre-wrap;
+            word-break:break-word; text-align:center; }
+  #update { position:fixed; left:0; right:0; bottom:0; z-index:2000; background:#fff;
+            border-top:1px solid var(--line); box-shadow:0 -6px 20px rgba(0,0,0,.08);
+            padding:14px 16px;
+            padding-left:max(16px, env(safe-area-inset-left));
+            padding-right:max(16px, env(safe-area-inset-right));
+            padding-bottom:max(14px, env(safe-area-inset-bottom)); }
+  #update[hidden] { display:none; }
+  #upver { font-weight:800; letter-spacing:.5px; margin-bottom:6px; }
+  #upnotes { white-space:pre-wrap; font:inherit; font-size:13px; color:var(--fg); margin:0 0 12px; }
+  .uprow { display:flex; gap:8px; }
+  .uprow button { flex:1; padding:12px; background:transparent; border:none; font:inherit; font-weight:700;
+                  text-transform:uppercase; letter-spacing:1px; cursor:pointer; }
+  #upyes { color:var(--ok); }
+  #upyes:disabled { color:var(--dim); }
+  #installhelp { position:fixed; inset:0; z-index:2100; background:rgba(0,0,0,.45);
+                 display:flex; align-items:center; justify-content:center; padding:24px; }
+  #installhelp[hidden] { display:none; }
+  #installhelp .card { background:#fff; border:1px solid var(--line); max-width:420px; width:100%;
+                       padding:20px; box-shadow:0 10px 40px rgba(0,0,0,.2); }
+  #installhelp .hh { font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-bottom:10px; }
+  #installhelp p { margin:0 0 16px; font-size:14px; line-height:1.6; }
+  #installhelp #hhok { width:100%; border:none; font-weight:700; }
+  .ok { color:var(--ok); } .err { color:var(--err); } .dim { color:var(--dim); }
+</style>
+</head>
+<body>
+<div id="splash">
+  <img id="splashimg" src="icon-512.png" alt="Reports">
+  <div id="splashname"></div>
+</div>
+<script>
+// Заставка ховається незалежно від головного скрипта (щоб не «зависнути» при помилці)
+(function () {
+  var sp = document.getElementById('splash');
+  if (!sp) return;
+  try { var v = JSON.parse(localStorage.getItem('kap_icon') || 'null'); if (v && v.i512) document.getElementById('splashimg').src = v.i512; } catch (e) {}
+  var sname = '';
+  try { sname = (localStorage.getItem('kap_name') || '').trim(); } catch (e) {}
+  document.getElementById('splashname').textContent = sname || 'Reports';
+  var done = false;
+  function hide() {
+    if (done) return; done = true;
+    sp.className = 'out';
+    setTimeout(function () { sp.hidden = true; }, 500);
+  }
+  var t = setTimeout(hide, 3000);
+  sp.addEventListener('click', function () { clearTimeout(t); hide(); });
+
+  // Помилка не мовчить: показуємо її смугою внизу — інакше «нічого не працює» без пояснень
+  function showErr(msg) {
+    var b = document.getElementById('errbar');
+    if (!b) {
+      b = document.createElement('div'); b.id = 'errbar';
+      b.addEventListener('click', function () { b.hidden = true; });
+      (document.body || document.documentElement).appendChild(b);
+    }
+    b.textContent = '⚠ ' + msg + ' — тап, щоб сховати';
+    b.hidden = false;
+  }
+  window.addEventListener('error', function (e) {
+    clearTimeout(t); hide();                                   // помилка — не блокуємо екран
+    var m = (e && (e.message || (e.error && e.error.message))) || 'помилка скрипта';
+    var f = e && e.filename ? String(e.filename).split('/').pop() : '';
+    showErr(m + (f ? ' · ' + f : '') + (e && e.lineno ? ':' + e.lineno : ''));
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e && e.reason;
+    showErr('Promise: ' + ((r && (r.message || r)) || 'відхилено'));
+  });
+  window.addEventListener('load', function () { setTimeout(hide, 3000); });
+})();
+</script>
+<button id="install" title="Встановити застосунок" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 21h14"/></svg></button>
+<main>
+  <button id="nametoggle" class="tpltoggle">Назва ▾</button>
+  <div id="namebox" hidden>
+    <label for="callsign">Назва</label>
+    <input id="callsign" placeholder="Назва позиції" autocomplete="off" spellcheck="false">
+    <input id="leader" placeholder="Позивний старшого групи" autocomplete="off" spellcheck="false">
+  </div>
+
+  <div id="stats">Вилетів за 24 год: 0</div>
+  <div id="clock">00:00</div>
+  <div id="flight">таймер зупинено</div>
+  <div id="wxhome" title="Погода — тап, щоб оновити" hidden></div>
+
+  <div id="tophud">
+    <button id="takeoff" title="Взліт / Сів">Взліт пішов</button>
+    <button id="reset" title="Скинути зміну" aria-label="Скинути зміну">Скинути зміну</button>
+  </div>
+
+  <div class="tplbar">
+    <div class="tplicons">
+      <button id="tpltoggle" class="tpltoggle" title="Шаблони"></button>
+      <button id="tplshare" class="tpltoggle" title="Поділитися шаблонами"></button>
+      <button id="copy" class="tpltoggle" title="Скопіювати звіт"></button>
+    </div>
+    <div id="tpls" class="tpls" hidden></div>
+  </div>
+  <div class="tpladd" id="tpladd" hidden>
+    <div class="tplnewrow">
+      <input id="tplnew" placeholder="Новий шаблон (або встав кілька)…" autocomplete="off">
+      <button id="tpladdbtn" class="tpl">Додати</button>
+    </div>
+  </div>
+
+  <hr class="sep">
+
+  <textarea id="comments" placeholder="Текст коментаря…" hidden></textarea>
+
+  <label class="darklbl">Режим звіту</label>
+  <div id="reportmode" class="seg">
+    <button type="button" data-mode="current" class="on">Зараз</button>
+    <button type="button" data-mode="day">День</button>
+    <button type="button" data-mode="night">Ніч</button>
+    <button type="button" data-mode="shift">Доба</button>
+    <button type="button" data-mode="week">7 днів</button>
+  </div>
+
+  <label class="airchk"><input type="checkbox" id="showair"> Показувати час у польоті («Зараз»)</label>
+  <label class="airchk"><input type="checkbox" id="bigedit"> Великий редактор звіту (номери рядків)</label>
+
+  <div class="actions">
+    <div class="actbar">
+      <button id="share" title="Поділитися">Поділитися</button>
+      <button id="previewbtn" title="Перегляд звіту">Перегляд звіту</button>
+      <button id="editbtn" title="Редактор звіту">Редактор</button>
+      <button id="map" title="Карта">Карта</button>
+      <button id="voice" title="Голосове керування">Голос</button>
+      <button id="vhelp" title="Голосові команди">Команди</button>
+    </div>
+  </div>
+
+  <div id="previewbox">
+    <textarea id="preview" spellcheck="false" placeholder="Звіт зʼявиться тут…"></textarea>
+  </div>
+
+  <div id="bigbox" hidden>
+    <div id="bighead">
+      <span id="bigtitle">Звіт</span>
+      <span id="biginfo"></span>
+      <button type="button" id="bigdone">Готово</button>
+    </div>
+    <div id="bigwrap">
+      <div id="biggutter"></div>
+      <textarea id="bigta" spellcheck="false" autocomplete="off" autocapitalize="sentences"></textarea>
+      <div id="bigmirror" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div id="editorbox" hidden>
+    <div id="shiftbox" hidden>
+      <div class="erow"><span class="elbl">Початок зміни</span><input type="time" id="shiftstart"></div>
+      <div class="erow"><span class="elbl">«День» з</span><input type="time" id="daystart"></div>
+      <div class="erow"><span class="elbl">Шифр району</span><input type="text" id="shiftcode" placeholder="напр. РУБАК"></div>
+      <div class="erow"><span class="elbl">Вильотів</span><input type="number" id="sortiecount" min="0" placeholder="авто"></div>
+      <label class="erow" style="cursor:pointer"><span class="elbl">Інтервали розвідки</span><input type="checkbox" id="scoutauto" style="flex:0 0 auto"></label>
+      <div class="ehead">Події зміни</div>
+      <div id="evlist"></div>
+      <button type="button" id="evadd" class="eadd">+ Додати подію</button>
+      <datalist id="evhints">
+        <option value="корегування вампіра по укриттю противника"></option>
+        <option value="корегування фпв по укриттю противника"></option>
+        <option value="корегування артилерії"></option>
+        <option value="виявлено ціль противника"></option>
+      </datalist>
+    </div>
+
+    <div id="daybox" hidden>
+      <div class="ehead">Зведення зміни</div>
+      <div class="erow"><span class="elbl">Втрати БпЛА</span><input type="number" id="dlost" min="0" value="0"></div>
+      <div class="erow"><span class="elbl">Пошкодження</span><input type="number" id="ddmg" min="0" value="0"></div>
+      <div class="ehead">Витрачено пропелерів</div>
+      <div id="proplist"></div>
+      <button type="button" id="propadd" class="eadd">+ Тип пропелера</button>
+      <div class="ehead">Дронів на позиції</div>
+      <div id="dronelist"></div>
+      <button type="button" id="droneadd" class="eadd">+ Тип дрона</button>
+    </div>
+
+    <div id="recwrap" hidden>
+      <button type="button" id="fldtoggle" class="tpltoggle">Поля вильоту ▾</button>
+      <div id="fldpanel" hidden>
+        <div id="fldlist"></div>
+        <div class="fldnew">
+          <input type="text" id="fldname" placeholder="Назва поля">
+          <select id="fldtype">
+            <option value="text">Текст</option>
+            <option value="number">Число</option>
+            <option value="select">Список</option>
+          </select>
+          <input type="text" id="fldopts" placeholder="Варіанти через кому" hidden>
+          <button type="button" id="fldadd">Додати поле</button>
+        </div>
+      </div>
+      <div id="reclist"></div>
+      <button type="button" id="recadd" class="eadd">+ Додати виліт</button>
+    </div>
+  </div>
+
+  <div id="status" class="dim"></div>
+</main>
+
+<div id="vhelpbox" hidden>
+  <div class="card">
+    <div class="hh">Голосові команди</div>
+    <dl class="vcmds">
+      <dt>«Взліт» · «зліт» · «старт»</dt><dd>почати виліт (запуск таймера)</dd>
+      <dt>«Сів» · «посадка» · «стоп»</dt><dd>завершити виліт (посадка)</dd>
+      <dt>«Поділитися» · «надіслати»</dt><dd>надіслати звіт</dd>
+      <dt>«Копіювати»</dt><dd>скопіювати звіт у буфер</dd>
+      <dt>«Звіт» · «перегляд»</dt><dd>відкрити/сховати перегляд звіту</dd>
+      <dt>«Карта» · «мапа»</dt><dd>відкрити карту</dd>
+      <dt>«Скинути»</dt><dd>скинути зміну (скажіть двічі — підтвердження)</dd>
+      <dt>«Зараз» · «День» · «Ніч» · «Доба» · «Тиждень»</dt><dd>обрати режим звіту</dd>
+      <dt>«Коментар …»</dt><dd>додати продиктований коментар (текст після слова)</dd>
+    </dl>
+    <p class="vnote">Тапніть 🎤, дозвольте мікрофон і говоріть. Працює в Chrome/Android, потрібен інтернет. Розпізнане показується в рядку статусу.</p>
+    <button id="vhok">Зрозуміло</button>
+  </div>
+</div>
+
+<div id="mapwrap" hidden>
+  <div id="mapview"></div>
+  <div id="mapinfo"><span id="mapcoords"></span><span id="mapbearing"></span></div>
+  <div id="mapctrl">
+    <button id="mapcancel" title="Закрити">✕</button>
+    <button id="mapgps" title="Моє місцезнаходження">◎</button>
+    <button id="maplayer" title="Супутник / схема">◧</button>
+    <button id="mapcompass" title="Компас">⇧</button>
+    <button id="mapwx" title="Погода">☁</button>
+  </div>
+  <div id="wxpanel" hidden></div>
+</div>
+
+<div id="update" hidden>
+  <div id="upver">Доступне оновлення</div>
+  <pre id="upnotes"></pre>
+  <div class="uprow">
+    <button id="upno">Пізніше</button>
+    <button id="upyes">Оновити</button>
+  </div>
+</div>
+
+
+<button id="guide" title="Інструкція"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/></svg></button>
+
+<div id="guidebox" hidden>
+  <div class="card">
+    <div class="hh">Як скласти й надіслати звіт</div>
+
+    <div class="gsec">1 · Налаштування</div>
+    <p>Розгорніть <b>«Назва ▾»</b> та вкажіть назву позиції (напр. Капібара) і позивний старшого групи. Зберігається автоматично.</p>
+
+    <div class="gsec">2 · Фіксація вильотів</div>
+    <p>Тапніть <b>стрілку вгору</b> — почався виліт, таймер рахує час. Тапніть <b>стрілку вниз</b> — посадка. Коментар до вильоту введіть у полі або тапом по <b>шаблону</b> («Розвідка», «Коригування артилерії»…). Шаблони можна додавати та редагувати.</p>
+
+    <div class="gsec">3 · Режим звіту</div>
+    <p><b>Зараз</b> — поточний виліт. <b>День</b> (06:00–18:00) і <b>Ніч</b> (18:00–06:00). <b>Доба</b> — від початку зміни (типово 16:00) на 24 год. <b>7 днів</b> — тиждень із розбивкою по днях.</p>
+
+    <div class="gsec">4 · Редактор <span class="gic">✎</span></div>
+    <p>У режимі <b>Доба</b>: вкажіть початок зміни, шифр району, за потреби — ручну кількість вильотів. Додавайте <b>події</b> (час, опис, координати) — між ними автоматично підставляється «Ведення розвідки».</p>
+    <p>У режимах <b>День / Ніч / 7 днів</b>: правте час взльоту й посадки, коментарі, додавайте або видаляйте вильоти. У <b>«Поля вильоту ▾»</b> створіть власні поля (текст / число / список) — вони самі рахуються в підсумках.</p>
+
+    <div class="gsec">5 · Перегляд і надсилання</div>
+    <p>Тапніть <b>документ</b> — зʼявиться готовий текст. Його можна вручну виправити просто в полі. Далі <b>стрілка «поділитися»</b> — відкриється системне вікно — оберіть застосунок. Або <b>копіювання</b> — текст ляже в буфер, вставте вручну.</p>
+
+
+    <div class="gsec">6 · Карта</div>
+    <p>Кнопка <b>мітка</b> — супутникова карта. <b>◎</b> — GPS, <b>◧</b> — супутник/схема, <b>⇧</b> — компас. Тап по мапі ставить точку; довге натискання по точці — мініменю (назва, колір, видалити). Координати точки (MGRS) підставляються в нову подію звіту, або кнопкою «У звіт».</p>
+
+    <p class="gnote">Дані зберігаються лише на цьому пристрої (офлайн). Вильоти зберігаються 8 діб. «Скинути зміну» очищає список вильотів — натисніть двічі для підтвердження.</p>
+    <button id="guideok">Зрозуміло</button>
+  </div>
+</div>
+
+<button id="icontoggle" title="Іконка застосунку" hidden><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></button>
+
+<div id="iconbox" hidden>
+  <div class="card">
+    <div class="hh">Іконка застосунку</div>
+    <div class="iconrow">
+      <img id="iconprev" alt="Іконка" width="72" height="72">
+      <div class="iconbtns">
+        <button type="button" id="iconpick">З пристрою</button>
+        <button type="button" id="iconreset">Стандартна</button>
+      </div>
+    </div>
+    <div class="iconurl">
+      <input type="url" id="iconurl" placeholder="Або посилання на зображення (https://…)" autocomplete="off" spellcheck="false">
+      <button type="button" id="iconurlbtn">Завантажити</button>
+    </div>
+    <p class="iconnote">Зображення автоматично приводиться до потрібних розмірів (192 і 512 px). Оберіть іконку <b>до встановлення</b> — саме вона зʼявиться на робочому столі.</p>
+    <button id="iconok">Готово</button>
+    <input type="file" id="iconinput" accept="image/*" hidden>
+  </div>
+</div>
+
+<div id="installhelp" hidden>
+  <div class="card">
+    <div class="hh">Встановити застосунок</div>
+    <p id="hhtext"></p>
+    <button id="hhok">Зрозуміло</button>
+  </div>
+</div>
+
+<script>
+  const $ = s => document.querySelector(s);
+  const status = (msg, cls) => { const e = $('#status'); e.className = cls || 'dim'; e.textContent = msg; };
+
+  function fmt(ms) {
+    const t = Math.floor(ms / 1000);
+    const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+    const mm = String(m).padStart(2, '0'), ss = String(s).padStart(2, '0');
+    return h > 0 ? h + ':' + mm + ':' + ss : mm + ':' + ss;
+  }
+  function clockNow() { return new Date().toLocaleString('uk-UA', { hour12: false }); }
+  function hm(ts) { return new Date(ts).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', hour12: false }); }
+
+  // ---- хранилище (безопасно: если недоступно — работаем в памяти) ----
+  const store = {
+    get(k){ try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k,v){ try { localStorage.setItem(k,v); } catch (e) {} }
+  };
+  const DAY = 24 * 3600 * 1000;
+
+  // ---- IndexedDB: надёжная "база" на устройстве (localStorage — быстрый кэш) ----
+  const DB_NAME = 'kapibara', STORE = 'kv';
+  let _dbp = null;
+  function openDB() {
+    if (_dbp) return _dbp;
+    _dbp = new Promise((resolve, reject) => {
+      let req;
+      try { req = indexedDB.open(DB_NAME, 1); } catch (e) { reject(e); return; }
+      req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    return _dbp;
+  }
+  async function idbSet(key, val) {
+    try {
+      const db = await openDB();
+      await new Promise((res, rej) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put(val, key);
+        tx.oncomplete = res; tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
+      });
+    } catch (e) { /* IDB недоступна — остаётся localStorage */ }
+  }
+  async function idbGet(key) {
+    try {
+      const db = await openDB();
+      return await new Promise((res, rej) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const r = tx.objectStore(STORE).get(key);
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      });
+    } catch (e) { return undefined; }
+  }
+
+  // записи полётов: { t: timestamp, c: коментар, lt: посадка, x: {fieldId: value} }
+  function loadFlights() {
+    try {
+      const arr = JSON.parse(store.get('kap_flights') || '[]');
+      return arr.map(normFlight);
+    } catch (e) { return []; }
+  }
+  function normFlight(x) {
+    if (typeof x === 'number') return { t: x, c: '', x: {} };
+    const o = { t: x.t, c: x.c || '', lt: x.lt, mgrs: x.mgrs || '', x: (x.x && typeof x.x === 'object') ? x.x : {} };
+    if (typeof x.rep === 'string' && x.rep) o.rep = x.rep;      // збережений вручну звіт «Зараз»
+    return o;
+  }
+  let flights = loadFlights();
+  let activeRec = null;   // полёт, к которому привязан комментарий (до следующего взльоту)
+
+  // ---- кастомні поля вильоту ----
+  function loadFields() {
+    try { const v = JSON.parse(store.get('kap_fields') || 'null'); if (Array.isArray(v)) return v; } catch (e) {}
+    return [];
+  }
+  let recFields = loadFields();
+  function saveFields() { store.set('kap_fields', JSON.stringify(recFields)); idbSet('kap_fields', recFields); }
+
+  // ---- події добової зміни ----
+  function loadEvents() {
+    try { const v = JSON.parse(store.get('kap_events') || 'null'); if (Array.isArray(v)) return v; } catch (e) {}
+    return [];
+  }
+  let events = loadEvents();
+  function saveEvents() {
+    const cut = Date.now() - 8 * DAY;
+    events = events.filter(e => e.t >= cut);
+    store.set('kap_events', JSON.stringify(events)); idbSet('kap_events', events);
+  }
+
+  // ---- зведення денної/нічної зміни ----
+  const PROP_TYPES = ['Тип А', 'Тип Б'];      // стандартні типи пропелерів у звіті День/Ніч
+  function defProps() { return PROP_TYPES.map(n => ({ name: n, qty: 0 })); }
+  function loadDayCfg() {
+    try { const v = JSON.parse(store.get('kap_daycfg') || 'null'); if (v && typeof v === 'object') return Object.assign({ lost: 0, dmg: 0, props: defProps(), drones: [] }, v); } catch (e) {}
+    return { lost: 0, dmg: 0, props: defProps(), drones: [] };     // перший запуск — Тип А і Тип Б
+  }
+  let dayCfg = loadDayCfg();
+  function saveDayCfg() { store.set('kap_daycfg', JSON.stringify(dayCfg)); idbSet('kap_daycfg', dayCfg); }
+
+  // ---- налаштування зміни ----
+  let shiftStart = store.get('kap_shiftstart') || '16:00';
+  let shiftCode = store.get('kap_shiftcode') || '';
+  let sortieCount = store.get('kap_sorties') || '';
+  let scoutAuto = store.get('kap_scout') !== '0';   // авто-інтервали розвідки (за замовч. увімк.)
+  function saveShiftCfg() {
+    store.set('kap_shiftstart', shiftStart); idbSet('kap_shiftstart', shiftStart);
+    store.set('kap_shiftcode', shiftCode); idbSet('kap_shiftcode', shiftCode);
+    store.set('kap_sorties', sortieCount); idbSet('kap_sorties', sortieCount);
+    store.set('kap_scout', scoutAuto ? '1' : '0'); idbSet('kap_scout', scoutAuto ? '1' : '0');
+    store.set('kap_daystart', dayStart); idbSet('kap_daystart', dayStart);
+  }
+
+  function saveFlights() {
+    const cut = Date.now() - 8 * DAY;   // зберігаємо 8 діб — для тижневого звіту
+    flights = flights.filter(f => f.t >= cut);
+    store.set('kap_flights', JSON.stringify(flights));
+    idbSet('kap_flights', flights);
+  }
+  // межі періодів
+  function shiftBounds() {
+    const [sh, sm] = shiftStart.split(':').map(Number);
+    const now = new Date();
+    const s = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sh || 0, sm || 0, 0, 0);
+    if (now.getTime() < s.getTime()) s.setDate(s.getDate() - 1);
+    return [s.getTime(), s.getTime() + DAY];
+  }
+  let dayStart = store.get('kap_daystart') || '06:00';   // початок «дня» (день = dayStart..+12год)
+  function dayStartHM() { const [h, m] = (dayStart || '06:00').split(':').map(Number); return { h: h || 0, m: m || 0 }; }
+  function dayBounds() {
+    const now = new Date(), hm = dayStartHM();
+    const s = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hm.h, hm.m, 0, 0);
+    if (now.getHours() * 60 + now.getMinutes() < hm.h * 60 + hm.m) s.setDate(s.getDate() - 1);
+    return s.getTime();
+  }
+  function withinDays(n) { const cut = Date.now() - n * DAY; return flights.filter(f => f.t >= cut); }
+  function within24() { return withinDays(1); }
+  function count24h() { return within24().length; }
+  function renderStats() { $('#stats').textContent = 'Вилетів за 24 год: ' + count24h(); }
+
+  // ---- таймер полёта ----
+  let flying = false, startTs = 0, tick = null;
+  let takeoffStr = '', landingStr = '', lastFlightMs = 0, wakeLock = null;
+
+  function buzz(p) { if (navigator.vibrate) { try { navigator.vibrate(p); } catch (e) {} } }
+  async function lockScreen() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
+  function unlockScreen() { try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) {} }
+
+  let prevSec = -1;
+  function renderClock() {
+    $('#clock').textContent = fmt(Date.now() - startTs);
+    // «У польоті» в превʼю «Зараз» цокає раз на секунду
+    if (showAir && reportMode === 'current' && !previewEdited && !$('#previewbox').hidden) {
+      const sec = Math.floor((Date.now() - startTs) / 1000);
+      if (sec !== prevSec) { prevSec = sec; updatePreview(); }
+    }
+  }
+  // взліт/посадка змінюють звіт — оновлюємо превʼю навіть після ручних правок
+  function refreshPreviewNow() {
+    if (previewEdited && $('#preview').value !== (buildText() || '')) status('Звіт оновлено — ручні правки скинуто', 'ok');
+    previewEdited = false; updatePreview(true);
+  }
+
+  function showInfo() {
+    const lines = [];
+    if (takeoffStr) lines.push('Взліт: ' + takeoffStr);
+    if (landingStr) lines.push('Сів: ' + landingStr);
+    if (lastFlightMs > 0) lines.push('У польоті: ' + fmt(lastFlightMs));
+    $('#flight').textContent = lines.length ? lines.join('\n') : 'таймер зупинено';
+  }
+
+  function takeoff() {
+    flying = true; startTs = Date.now(); takeoffStr = clockNow(); landingStr = ''; lastFlightMs = 0;
+    $('#comments').value = '';                  // новий виліт — чистий коментар
+    curRecT = null;                                              // новий виліт стає поточним у звіті
+    activeRec = { t: Date.now(), c: '', mgrs: '', x: {} };        // создаём запись вылета
+    flights.push(activeRec); saveFlights(); renderStats(); syncEditor();
+    $('#clock').classList.add('live');
+    $('#takeoff').textContent = 'Сів';
+    $('#takeoff').classList.add('flying');
+    renderClock(); showInfo(); refreshPreviewNow();
+    tick = setInterval(renderClock, 250);
+    lockScreen(); buzz(40);
+  }
+
+  function landing() {
+    flying = false; clearInterval(tick); tick = null;
+    lastFlightMs = Date.now() - startTs; landingStr = clockNow();
+    if (activeRec) { activeRec.lt = Date.now(); saveFlights(); syncEditor(); }
+    // комментарий уже привязан к activeRec через ввод; activeRec остаётся до след. взльоту
+    $('#clock').textContent = fmt(lastFlightMs);
+    $('#clock').classList.remove('live');
+    $('#takeoff').textContent = 'Взліт пішов';
+    $('#takeoff').classList.remove('flying');
+    showInfo(); refreshPreviewNow(); unlockScreen(); buzz([40, 60, 40]);
+  }
+
+  $('#takeoff').addEventListener('click', () => (flying ? landing() : takeoff()));
+  document.addEventListener('visibilitychange', () => { if (flying && document.visibilityState === 'visible') lockScreen(); });
+
+  // ---- привязка комментария к текущему/последнему вылету (до/после посадки) ----
+  $('#comments').addEventListener('input', () => {
+    if (activeRec) { activeRec.c = $('#comments').value; saveFlights(); syncEditor(); }
+  });
+
+  // ---- шаблони коментарів ----
+  function loadTemplates() {
+    try { const v = JSON.parse(store.get('kap_templates') || 'null'); if (Array.isArray(v)) return v; } catch (e) {}
+    return [];   // без вбудованих шаблонів — кожен пристрій має власні, локальні
+  }
+  let templates = loadTemplates();
+  function saveTemplates() { store.set('kap_templates', JSON.stringify(templates)); idbSet('kap_templates', templates); }
+
+  const TIME_RE = /^\d{1,2}:\d{2}\s+/;                       // рядок уже з часом
+  const MGRS_RE = /^\d{1,2}\s*[C-X]\s*[A-Z]{2}\s*\d{2,5}\s*\d{2,5}\b/i;   // координати MGRS — без часу
+  function isCoord(s) { return MGRS_RE.test(s.trim()); }
+  function insertTemplate(text) {
+    const ta = $('#comments');
+    const cur = ta.value.replace(/\s+$/, '');
+    const body = text.trim();
+    const has = cur.split('\n').some(l => l.trim().replace(TIME_RE, '').toLowerCase() === body.toLowerCase());
+    if (has) { ta.focus(); return; }            // не дублювати той самий шаблон
+    const stamped = isCoord(body) ? body : (hm(Date.now()) + ' ' + body);   // координати — без часу
+    ta.value = cur ? (cur + '\n' + stamped) : stamped;
+    ta.dispatchEvent(new Event('input'));   // привязка к вылету + сохранение
+    ta.focus();
+  }
+
+  let tplEdit = false, tplOpen = false;
+  // вручну набрані рядки теж отримують час (при виході з поля)
+  $('#comments').addEventListener('blur', () => {
+    const ta = $('#comments');
+    const out = ta.value.split('\n').map(l => {
+      const s = l.trim();
+      if (!s || TIME_RE.test(s) || isCoord(s)) return s;
+      return hm(Date.now()) + ' ' + s;
+    });
+    const v = out.filter((l, i) => l || i < out.length - 1).join('\n');
+    if (v !== ta.value) { ta.value = v; ta.dispatchEvent(new Event('input')); }
+  });
+  function renderTemplates() {
+    const box = $('#tpls');
+    box.innerHTML = '';
+    box.hidden = !tplOpen;
+    box.classList.toggle('editing', tplEdit);
+    templates.forEach((t, i) => {
+      const b = document.createElement('button');
+      b.className = 'tpl';
+      b.textContent = tplEdit ? ('✕ ' + t) : t;
+      b.addEventListener('click', () => {
+        if (tplEdit) { templates.splice(i, 1); saveTemplates(); renderTemplates(); }
+        else insertTemplate(t);
+      });
+      box.appendChild(b);
+    });
+    const add = document.createElement('button');
+    add.className = 'tpl add'; add.textContent = '+'; add.title = 'Додати шаблон';
+    add.addEventListener('click', () => { const e = $('#tpladd'); e.hidden = !e.hidden; if (!e.hidden) $('#tplnew').focus(); });
+    box.appendChild(add);
+    const ed = document.createElement('button');
+    ed.className = 'tpl edit'; ed.textContent = tplEdit ? 'готово' : '✎'; ed.title = 'Редагувати';
+    ed.addEventListener('click', () => { tplEdit = !tplEdit; renderTemplates(); });
+    box.appendChild(ed);
+  }
+  function addTemplate() {
+    const raw = $('#tplnew').value;
+    const items = raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);   // одразу кілька (вставка з поділитися)
+    if (!items.length) return;
+    let added = 0;
+    for (const t of items) if (!templates.includes(t)) { templates.push(t); added++; }
+    saveTemplates();
+    $('#tplnew').value = ''; $('#tpladd').hidden = true;
+    renderTemplates();
+    if (items.length > 1) status(added ? ('✓ Додано шаблонів: ' + added) : 'Усі шаблони вже є', added ? 'ok' : 'dim');
+  }
+  $('#tpladdbtn').addEventListener('click', addTemplate);
+  $('#tplnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTemplate(); } });
+
+  // ---- поділитися шаблонами (перенос між своїми пристроями) ----
+  $('#tplshare').addEventListener('click', async () => {
+    if (!templates.length) { status('Немає шаблонів', 'dim'); return; }
+    const text = templates.join('\n');
+    try {
+      if (navigator.share) { await navigator.share({ title: 'Шаблони Reports', text }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(text); status('✓ Шаблони скопійовано (' + templates.length + ')', 'ok'); }
+    catch (e) { window.prompt('Скопіюй шаблони:', text); }
+  });
+  $('#tpltoggle').addEventListener('click', () => {
+    tplOpen = !tplOpen;
+    $('#tpladd').hidden = true;               // поле створення завжди приховане — відкривається лише кнопкою «+»
+    if (!tplOpen) tplEdit = false;
+    $('#tpltoggle').classList.toggle('open', tplOpen);
+    renderTemplates();
+  });
+  renderTemplates();
+
+  // ---- название и чекбокс (с запоминанием) ----
+  const savedName = store.get('kap_name');
+  if (savedName) $('#callsign').value = savedName;
+  const savedLeader = store.get('kap_leader');
+  if (savedLeader) $('#leader').value = savedLeader;
+  function nameToggleLabel() {
+    const open = !$('#namebox').hidden;
+    const nm = $('#callsign').value.trim() || 'Назва';
+    const ld = $('#leader').value.trim();
+    $('#nametoggle').textContent = nm + (ld ? ' · ' + ld : '') + (open ? ' ▴' : ' ▾');
+  }
+  $('#nametoggle').addEventListener('click', () => { $('#namebox').hidden = !$('#namebox').hidden; nameToggleLabel(); });
+  $('#callsign').addEventListener('input', () => { const v = $('#callsign').value; store.set('kap_name', v); idbSet('kap_name', v); nameToggleLabel(); });
+  $('#leader').addEventListener('input', () => { const v = $('#leader').value; store.set('kap_leader', v); idbSet('kap_leader', v); nameToggleLabel(); });
+
+  // ---- іконка застосунку (обирається до встановлення) ----
+  const DEF_ICON192 = 'icon-192.png', DEF_ICON512 = 'icon-512.png';
+  let customIcon = null;
+  try { const v = JSON.parse(store.get('kap_icon') || 'null'); if (v && v.i192 && v.i512) customIcon = v; } catch (e) {}
+
+  function squareIcon(img, size) {
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    const g = c.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, size, size);
+    const safe = size * 0.84;                              // безпечна зона для maskable
+    const k = Math.min(safe / img.width, safe / img.height);
+    const w = img.width * k, h = img.height * k;
+    g.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    return c.toDataURL('image/png');
+  }
+  function processIcon(file) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { try { res({ i192: squareIcon(img, 192), i512: squareIcon(img, 512) }); } catch (e) { rej(e); } finally { URL.revokeObjectURL(url); } };
+      img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
+      img.src = url;
+    });
+  }
+  let manifestBlobURL = null;
+  async function applyManifest() {
+    const link = document.querySelector('link[rel="manifest"]');
+    if (!link) return;
+    if (manifestBlobURL) { URL.revokeObjectURL(manifestBlobURL); manifestBlobURL = null; }
+    if (!customIcon) { link.href = 'manifest.webmanifest'; return; }
+    try {
+      const base = await (await fetch('manifest.webmanifest')).json();
+      base.icons = [
+        { src: customIcon.i192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: customIcon.i512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+      ];
+      manifestBlobURL = URL.createObjectURL(new Blob([JSON.stringify(base)], { type: 'application/manifest+json' }));
+      link.href = manifestBlobURL;
+    } catch (e) { link.href = 'manifest.webmanifest'; }
+  }
+  function applyIcon() {
+    const p = $('#iconprev'), apple = document.querySelector('link[rel="apple-touch-icon"]'), fav = $('#favicon');
+    const src = customIcon ? customIcon.i192 : DEF_ICON192;
+    p.src = src;
+    if (apple) apple.href = src;
+    if (fav) fav.href = src;
+    applyManifest();
+  }
+  function saveIcon() {
+    if (customIcon) { store.set('kap_icon', JSON.stringify(customIcon)); idbSet('kap_icon', customIcon); }
+    else { try { localStorage.removeItem('kap_icon'); } catch (e) {} idbSet('kap_icon', null); }
+  }
+  function imgFromURL(url) {   // спершу пряме завантаження, потім через fetch→blob
+    return new Promise((res, rej) => {
+      const img = new Image(); img.crossOrigin = 'anonymous';
+      img.onload = () => res(img);
+      img.onerror = async () => {
+        try {
+          const r = await fetch(url, { mode: 'cors' });
+          if (!r.ok) throw new Error('http');
+          const b = await r.blob();
+          const u = URL.createObjectURL(b), i2 = new Image();
+          i2.onload = () => { res(i2); URL.revokeObjectURL(u); };
+          i2.onerror = () => { URL.revokeObjectURL(u); rej(new Error('img')); };
+          i2.src = u;
+        } catch (e) { rej(e); }
+      };
+      img.src = url;
+    });
+  }
+  function setIconFromImg(img) {
+    customIcon = { i192: squareIcon(img, 192), i512: squareIcon(img, 512) };
+    saveIcon(); applyIcon();
+    status('✓ Іконку змінено. Встановіть застосунок, щоб вона зʼявилась.', 'ok');
+  }
+  $('#icontoggle').addEventListener('click', () => { $('#iconbox').hidden = false; });
+  $('#guide').addEventListener('click', () => { $('#guidebox').hidden = false; });
+  $('#guideok').addEventListener('click', () => { $('#guidebox').hidden = true; });
+  $('#guidebox').addEventListener('click', e => { if (e.target === $('#guidebox')) $('#guidebox').hidden = true; });
+  $('#iconok').addEventListener('click', () => { $('#iconbox').hidden = true; });
+  $('#iconbox').addEventListener('click', e => { if (e.target === $('#iconbox')) $('#iconbox').hidden = true; });
+  $('#iconpick').addEventListener('click', () => $('#iconinput').click());
+  $('#iconinput').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const ic = await processIcon(f); customIcon = ic; saveIcon(); applyIcon(); status('✓ Іконку змінено. Встановіть застосунок, щоб вона зʼявилась.', 'ok'); }
+    catch (_) { status('Не вдалося обробити зображення', 'err'); }
+    $('#iconinput').value = '';
+  });
+  $('#iconurlbtn').addEventListener('click', async () => {
+    const u = $('#iconurl').value.trim();
+    if (!u) { status('Вставте посилання на зображення', 'err'); return; }
+    $('#iconurlbtn').disabled = true;
+    try { setIconFromImg(await imgFromURL(u)); $('#iconurl').value = ''; }
+    catch (_) { status('Не вдалося завантажити (сайт може блокувати доступ). Збережіть файл і оберіть «З пристрою».', 'err'); }
+    finally { $('#iconurlbtn').disabled = false; }
+  });
+  $('#iconreset').addEventListener('click', () => { customIcon = null; saveIcon(); applyIcon(); status('Повернуто стандартну іконку', 'dim'); });
+  applyIcon();
+  nameToggleLabel();
+  let reportMode = 'current';   // завжди «Зараз» на старті
+  let showAir = store.get('kap_showair') === '1';   // «У польоті» в «Зараз» — типово вимкнено
+  function setMode(m) {
+    reportMode = m;
+    store.set('kap_reportmode', m); idbSet('kap_reportmode', m);
+    document.querySelectorAll('#reportmode button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+    if (typeof renderEditor === 'function' && !$('#editorbox').hidden) { renderEditor(); updatePreview(true); }
+  }
+  document.querySelectorAll('#reportmode button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  setMode(reportMode);
+
+  // ---- сборка текста ----
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function fmtD(ts) { const d = new Date(ts); return pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(-2); }
+  function fmtD4(ts) { const d = new Date(ts); return pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1) + '.' + d.getFullYear(); }
+  function sameDate(a, b) { const x = new Date(a), y = new Date(b); return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate(); }
+  function tLabel(ts, base) { return (sameDate(ts, base) ? '' : fmtD(ts) + ' ') + hm(ts); }
+  function fieldsSuffix(f) {
+    const out = [];
+    for (const fd of recFields) {
+      const v = (f.x && f.x[fd.id] != null) ? String(f.x[fd.id]).trim() : '';
+      if (!v) continue;
+      if (fd.type === 'number' && (!Number(v) || Number(v) === 0)) continue;
+      out.push(fd.name + ': ' + v);
+    }
+    return out.length ? ' · ' + out.join(' · ') : '';
+  }
+  function cLines(f) { return (f.c || '').split('\n').map(s => s.trim()).filter(Boolean); }
+  // виліт → подія звіту: текст (шаблони без часу, без координатних рядків), час, координати
+  function flightEvent(f) {
+    const txt = cLines(f).map(l => l.replace(TIME_RE, '')).filter(l => l && !isCoord(l)).join(', ');
+    const coordLine = cLines(f).map(l => l.replace(TIME_RE, '')).find(isCoord);
+    // якщо координати вже підставлені до конкретного шаблону — не дублювати їх у хвості події
+    const inline = COORD_RE.test(txt);
+    return { t: f.t, t2: f.lt, text: txt, mgrs: inline ? '' : (f.mgrs || coordLine || '') };
+  }
+  function sortieLine(f, indent) {
+    const pad = indent || '';
+    const a = hm(f.t), b = f.lt ? hm(f.lt) : '…';
+    const dur = f.lt ? ' (' + fmt(f.lt - f.t) + ')' : '';
+    const cs = cLines(f);
+    const head = pad + a + '–' + b + dur;
+    if (cs.length <= 1) return head + (cs.length ? ' — ' + cs[0] : '') + fieldsSuffix(f);
+    // кілька коментарів — кожен окремим рядком під вильотом
+    return [head + fieldsSuffix(f), ...cs.map(s => pad + '  · ' + s)].join('\n');
+  }
+  // підсумки за шаблонами коментарів
+  function tplTotals(list) {
+    const out = [];
+    for (const tpl of templates) {
+      const needle = tpl.toLowerCase().trim();
+      if (!needle) continue;
+      const n = list.filter(f => (f.c || '').toLowerCase().includes(needle)).length;
+      if (n > 0) out.push(tpl + ': ' + n);
+    }
+    return out;
+  }
+  // підсумки за кастомними полями
+  function fieldTotals(list) {
+    const out = [];
+    for (const fd of recFields) {
+      const vals = list.map(f => (f.x && f.x[fd.id] != null) ? String(f.x[fd.id]).trim() : '').filter(v => v !== '');
+      if (!vals.length) continue;
+      if (fd.type === 'number') {
+        const sum = vals.reduce((s, v) => s + (Number(v) || 0), 0);
+        if (sum > 0) out.push('Усього ' + fd.name + ': ' + sum);
+      } else if (fd.type === 'select') {
+        for (const opt of (fd.opts || [])) {
+          const n = vals.filter(v => v === opt).length;
+          if (n > 0) out.push(fd.name + ' — ' + opt + ': ' + n);
+        }
+      } else {
+        const m = new Map();
+        for (const v of vals) m.set(v, (m.get(v) || 0) + 1);
+        [...m.entries()].sort((a, b) => b[1] - a[1]).forEach(([v, n]) => out.push(fd.name + ' — ' + v + ': ' + n));
+      }
+    }
+    return out;
+  }
+  function totalsBlock(list) { return [...tplTotals(list), ...fieldTotals(list)]; }
+
+  function buildText() {
+    const name = $('#callsign').value.trim();
+    const leader = $('#leader').value.trim();
+    const c = $('#comments').value.trim();
+
+    // ---- Доба: хронологія подій з інтервалами розвідки ----
+    if (reportMode === 'shift') {
+      const [s, e] = shiftBounds();
+      const within = flights.filter(f => f.t >= s && f.t < e);
+      const flightEvs = within.filter(f => (f.c || '').trim() || f.mgrs).map(flightEvent);
+      const manualEvs = events.filter(ev => ev.t >= s && ev.t < e);
+      const evs = [...manualEvs, ...flightEvs].sort((a, b) => a.t - b.t);
+      const lines = [];
+      if (name) lines.push('Екіпаж СП "' + name + '":');   // перший рядок — екіпаж СП
+      lines.push(fmtD(s) + '-' + fmtD(e));         // другий — число
+      lines.push('Перелік подій та виявлених цілей' + (shiftCode ? ' ' + shiftCode : '') + ' в районі спостереження');
+      const scout = (a, b) => hm(a) + '-' + hm(b) + '-Ведення розвідки';
+      let cur = s;
+      for (const ev of evs) {
+        if (scoutAuto && ev.t > cur) lines.push(scout(cur, ev.t));   // інтервал розвідки до події
+        const when = hm(ev.t) + (ev.t2 ? '-' + hm(ev.t2) : '');
+        const body = ev.text || '';
+        lines.push(when + (body ? ' ' + body : '') + (ev.mgrs ? ' за координатами ' + ev.mgrs : ''));
+        cur = (ev.t2 || ev.t);
+      }
+      if (scoutAuto && cur < e) lines.push(scout(cur, e));           // до кінця зміни
+      const cnt = (sortieCount !== '' && !isNaN(Number(sortieCount))) ? Number(sortieCount) : within.length;
+      lines.push('За час добової зміни здійснено ' + cnt + ' вильотів.');
+      lines.push('Без втрат чи поранень серед особового складу СП ' + name + ': Інформацію про події та виявлені цілі було передано оперативному черговому.');
+      return lines.join('\n');
+    }
+
+    // ---- День / Ніч (зведення) ----
+    if (reportMode === 'day' || reportMode === 'night') {
+      const s = dayBounds(), H = 3600e3;
+      let win = reportMode === 'day' ? [s, s + 12 * H] : [s + 12 * H, s + 24 * H];
+      // нічна зміна ще не почалась (звіт складають зранку) — беремо ніч, що минула
+      if (reportMode === 'night' && win[0] > Date.now()) win = [win[0] - 24 * H, win[1] - 24 * H];
+      const within = flights.filter(f => f.t >= win[0] && f.t < win[1]).sort((a, b) => a.t - b.t);
+      const allLines = within.flatMap(f => cLines(f).map(l => l.replace(TIME_RE, '').toLowerCase()));
+      const countBy = re => allLines.filter(l => re.test(l)).length;
+      const lines = [];
+      if (name) lines.push('Екіпаж СП "' + name + '":');
+      const d1 = fmtD4(win[0]), d2 = fmtD4(win[1]);
+      lines.push(hm(win[0]) + '-' + hm(win[1]) + ' ' + (d1 === d2 ? d1 : d1 + '-' + d2));
+      let n = 1;
+      lines.push(n++ + '. Кількість розвідувальних вильотів - ' + within.length);
+      lines.push(n++ + '. Кількість виявлених цілей противника - ' + countBy(/виявл|ціл/));
+      lines.push(n++ + '. Кількість проведених коригувань засобів ураження - ' + countBy(/кориг|корег/));
+      lines.push(n++ + '. Супровід СОУ - ' + countBy(/соу/));
+      lines.push(n++ + '. Супровід НРК - ' + countBy(/нрк/));
+      lines.push(n++ + '. Втрати БпЛА - ' + (dayCfg.lost || 0));
+      lines.push(n++ + '. Пошкодження БпЛА - ' + (dayCfg.dmg || 0));
+      const props = (dayCfg.props || []).filter(p => p.name);
+      const propList = props.length ? props : defProps();          // типи вказуємо завжди
+      lines.push(n++ + '. Витрачено пропелерів - ' +
+        propList.map(p => '"' + p.name + '" ' + (p.qty || 0) + ' шт').join(','));
+      const drones = (dayCfg.drones || []).filter(dr => dr.name);
+      lines.push(n++ + '. Дронів на позиції ' +
+        (drones.length ? drones.map(dr => dr.name + ' - ' + (dr.qty || 0) + ' шт').join(', ') : '- 0 шт'));
+      // решта шаблонів, що використовувались, і кастомні поля — після основних пунктів
+      const skip = /розвід|виявл|ціл|кориг|корег|соу|нрк/i;
+      for (const t of templates) {
+        if (skip.test(t)) continue;
+        const cnt = allLines.filter(l => l.includes(t.toLowerCase().trim())).length;
+        if (cnt > 0) lines.push(n++ + '. ' + t + ' - ' + cnt);
+      }
+      fieldTotals(within).forEach(l => lines.push(n++ + '. ' + l));
+      return lines.join('\n');
+    }
+
+    if (reportMode === 'week') {
+      // тиждень: дні зі своїми вильотами (як добові зведення)
+      const within = withinDays(7);
+      const lines = [name ? 'Тиждень: ' + name : 'Тиждень'];
+      lines.push('Усього вилетів: ' + within.length);
+      const days = new Map();
+      for (const f of within) {
+        const d = new Date(f.lt || f.t);
+        const key = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+        if (!days.has(key)) days.set(key, []);
+        days.get(key).push(f);
+      }
+      let first = true;
+      for (const key of [...days.keys()].sort()) {
+        const arr = days.get(key);
+        const d = new Date(arr[0].lt || arr[0].t);
+        const wd = d.toLocaleDateString('uk-UA', { weekday: 'short' });
+        if (!first) lines.push('');
+        first = false;
+        lines.push(pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1) + ' (' + wd + '): ' + arr.length);
+        for (const f of arr) lines.push(sortieLine(f, '  '));
+      }
+      const tot = totalsBlock(within);
+      if (tot.length) { lines.push(''); tot.forEach(l => lines.push(l)); }
+      if (c && !activeRec) lines.push(c);
+      return lines.join('\n');
+    }
+
+    const lines = [];
+    const rec = curRec();                                       // активний, останній або обраний у редакторі
+    if (rec && rec.rep) return rec.rep;                         // збережена вручну версія звіту цього вильоту
+    const dstr = fmtD(rec ? rec.t : Date.now());                // число вильоту
+    lines.push(name ? 'СП ' + name + ' ' + dstr : dstr);        // СП і число — одним рядком
+    if (rec) {
+      lines.push('Взліт: ' + hm(rec.t));
+      lines.push('Загальна розвідка');                          // без числа
+      const tpls = cLines(rec).map(l => l.replace(TIME_RE, ''))
+        .filter(l => l && !isCoord(l) && l.trim().toLowerCase() !== 'загальна розвідка');   // не дублювати рядок вище
+      tpls.forEach(l => lines.push(l));                         // шаблони, якщо додані
+      if (rec.mgrs && !tpls.some(l => l.indexOf(rec.mgrs) >= 0)) lines.push('За координатами ' + rec.mgrs);
+      if (rec.lt) {
+        lines.push('Сів: ' + hm(rec.lt));
+        if (showAir) lines.push('У польоті: ' + fmt(rec.lt - rec.t));
+      } else if (flying && rec === activeRec) {
+        if (showAir) lines.push('У польоті: ' + fmt(Date.now() - (startTs || rec.t)));
+      }
+    } else {
+      lines.push('Ще не було вильотів. Натисни «Взліт».');
+    }
+    return lines.join('\n');
+  }
+
+  async function fallbackCopy(text) {
+    try { await navigator.clipboard.writeText(text); status('Текст скопійовано в буфер', 'ok'); }
+    catch (e) { status('Не вдалося скопіювати — виділи текст у полі перегляду вручну', 'err'); }
+  }
+  async function share() {
+    const text = reportText();
+    if (navigator.share) {
+      $('#share').disabled = true;
+      try { await navigator.share({ title: $('#callsign').value.trim() || 'Звіт', text }); status('✓ Готово', 'ok'); }
+      catch (e) { if (e && e.name === 'AbortError') status('Отменено', 'dim'); else await fallbackCopy(text); }
+      finally { $('#share').disabled = false; }
+    } else { await fallbackCopy(text); }
+  }
+  $('#share').addEventListener('click', share);
+
+  // ---- голосове керування (Web Speech API, uk-UA) ----
+  let recog = null, voiceOn = false;
+  function handleVoice(raw) {
+    const t = raw.toLowerCase().trim();
+    const has = (...ws) => ws.some(w => t.includes(w));
+    const mC = t.match(/^(?:коментар|комент|додай коментар|запиши|нотатка)\s+(.+)/);
+    if (mC) { const ta = $('#comments'); ta.value = (ta.value ? ta.value + '\n' : '') + mC[1]; ta.dispatchEvent(new Event('input')); status('🎙 Коментар додано', 'ok'); return; }
+    if (has('взліт', 'зліт', 'злет', 'старт', 'полетіли', 'вилітаю', 'поїхали')) { if (!flying) { takeoff(); status('🎙 Взліт', 'ok'); } else status('Вже в польоті', 'dim'); return; }
+    if (has('сів', 'посадка', 'приземл', 'сідаю', 'сел', 'стоп')) { if (flying) { landing(); status('🎙 Сів', 'ok'); } else status('Не в польоті', 'dim'); return; }
+    if (has('поділ', 'надісл', 'відправ', 'шер')) { status('🎙 Поділитися', 'ok'); share(); return; }
+    if (has('копі', 'скопі', 'буфер')) { status('🎙 Копіювати', 'ok'); copyText(); return; }
+    if (has('тиждень', 'сім днів', '7 днів')) { setMode('week'); status('Режим: 7 днів', 'ok'); return; }
+    if (has('доба', '24')) { setMode('shift'); status('Режим: Доба', 'ok'); return; }
+    if (has('ніч')) { setMode('night'); status('Режим: Ніч', 'ok'); return; }
+    if (has('день', 'денна')) { setMode('day'); status('Режим: День', 'ok'); return; }
+    if (has('зараз', 'поточн')) { setMode('current'); status('Режим: Зараз', 'ok'); return; }
+    if (has('перегляд', 'показати звіт', 'звіт')) { $('#previewbtn').click(); status('🎙 Перегляд звіту', 'ok'); return; }
+    if (has('карта', 'мапа')) { $('#map').click(); status('🎙 Карта', 'ok'); return; }
+    if (has('скинь', 'скинути', 'обнули')) { $('#reset').click(); return; }
+    status('Не розпізнано: ' + t, 'dim');
+  }
+  function makeRecog() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    const r = new SR();
+    r.lang = 'uk-UA'; r.continuous = true; r.interimResults = false; r.maxAlternatives = 1;
+    r.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) handleVoice(e.results[i][0].transcript); };
+    r.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { voiceOn = false; $('#voice').classList.remove('on'); status('Немає доступу до мікрофона', 'err'); } };
+    r.onend = () => { if (voiceOn) setTimeout(runRecog, 300); };   // авто-перезапуск свіжим екземпляром
+    return r;
+  }
+  function runRecog() {
+    if (!voiceOn) return;
+    recog = makeRecog();
+    if (!recog) { voiceOn = false; $('#voice').classList.remove('on'); status('Голос не підтримується (потрібен Chrome)', 'err'); return; }
+    try { recog.start(); } catch (_) { setTimeout(runRecog, 400); }
+  }
+  function startVoice() {
+    if (voiceOn) return;
+    if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) { status('Голос не підтримується цим браузером (потрібен Chrome)', 'err'); return; }
+    voiceOn = true; $('#voice').classList.add('on');
+    status('🎙 Слухаю: зліт · сів · звіт · карта · день/ніч/доба · коментар…', 'ok');
+    runRecog();
+  }
+  function stopVoice() { voiceOn = false; $('#voice').classList.remove('on'); if (recog) { recog.onend = null; try { recog.stop(); } catch (_) {} } status('Голос вимкнено', 'dim'); }
+  $('#voice').addEventListener('click', () => voiceOn ? stopVoice() : startVoice());
+  $('#vhelp').addEventListener('click', () => { $('#vhelpbox').hidden = false; });
+  $('#vhok').addEventListener('click', () => { $('#vhelpbox').hidden = true; });
+  $('#vhelpbox').addEventListener('click', e => { if (e.target === $('#vhelpbox')) $('#vhelpbox').hidden = true; });
+
+  async function copyText() {
+    const text = reportText();
+    try { await navigator.clipboard.writeText(text); status('✓ Скопійовано', 'ok'); }
+    catch (e) { status('Не вдалося скопіювати — виділи текст у полі перегляду вручну', 'err'); }
+  }
+  $('#copy').addEventListener('click', copyText);
+
+  // ---- попередній перегляд звіту (редагований) ----
+  let previewEdited = false;
+  let curRecT = null;                 // виліт, обраний для звіту «Зараз» (null — активний/останній)
+  function curRec() {
+    if (curRecT != null) { const f = flights.find(v => v.t === curRecT); if (f) return f; curRecT = null; }
+    return activeRec || flights[flights.length - 1] || null;
+  }
+  function reportText() {
+    return $('#previewbox').hidden ? buildText() : $('#preview').value;
+  }
+  function updatePreview(force) {
+    if (previewEdited && !force) return;        // не затирати ручні правки
+    if (force) previewEdited = false;
+    const t = buildText() || '';
+    if ($('#preview').value !== t) $('#preview').value = t;
+  }
+  // ---- великий редактор звіту: номери рядків + перенос ----
+  let bigEdit = store.get('kap_bigedit') === '1';
+  $('#bigedit').checked = bigEdit;
+  $('#bigedit').addEventListener('change', () => {
+    bigEdit = $('#bigedit').checked;
+    store.set('kap_bigedit', bigEdit ? '1' : '0'); idbSet('kap_bigedit', bigEdit ? '1' : '0');
+    status(bigEdit ? 'Великий редактор увімкнено — тапніть по звіту' : 'Великий редактор вимкнено', 'dim');
+  });
+  function syncGutter() {
+    const g = document.getElementById('gutinner');
+    if (g) g.style.transform = 'translateY(' + (-$('#bigta').scrollTop) + 'px)';
+  }
+  function bigNumbers() {
+    const ta = $('#bigta'), mir = $('#bigmirror'), gut = $('#biggutter');
+    const rows = ta.value.split('\n');
+    mir.style.width = ta.clientWidth + 'px';          // однакова ширина — однакові переноси
+    const frag = document.createDocumentFragment();
+    rows.forEach(l => { const dv = document.createElement('div'); dv.textContent = l || ' '; frag.appendChild(dv); });
+    mir.innerHTML = ''; mir.appendChild(frag);
+    let html = '';                                    // висота номера = висота рядка з урахуванням переносу
+    for (let i = 0; i < mir.children.length; i++) html += '<div style="height:' + mir.children[i].offsetHeight + 'px">' + (i + 1) + '</div>';
+    gut.innerHTML = '<div id="gutinner" style="padding-top:10px">' + html + '</div>';
+    $('#biginfo').textContent = rows.length + ' ряд. · ' + ta.value.length + ' симв.';
+    syncGutter();
+  }
+  function openBig() {
+    $('#bigta').value = $('#preview').value;
+    $('#bigbox').hidden = false;
+    bigNumbers();
+    $('#bigta').focus();
+  }
+  function closeBig() {
+    $('#bigbox').hidden = true;
+    if ($('#preview').value !== $('#bigta').value) {
+      $('#preview').value = $('#bigta').value;
+      $('#preview').dispatchEvent(new Event('input', { bubbles: true }));   // збереження до вильоту / previewEdited
+    }
+  }
+  $('#preview').addEventListener('pointerdown', e => { if (bigEdit) { e.preventDefault(); openBig(); } });
+  $('#preview').addEventListener('focus', () => { if (bigEdit && $('#bigbox').hidden) { $('#preview').blur(); openBig(); } });
+  $('#bigdone').addEventListener('click', closeBig);
+  $('#bigta').addEventListener('input', bigNumbers);
+  $('#bigta').addEventListener('scroll', syncGutter);
+  window.addEventListener('resize', () => { if (!$('#bigbox').hidden) bigNumbers(); });
+
+  let repSaveTimer = null;
+  $('#preview').addEventListener('input', () => {
+    previewEdited = true;
+    if (reportMode !== 'current') return;
+    const r = curRec(); if (!r) return;
+    const first = !r.rep;
+    r.rep = $('#preview').value;                                // звіт «Зараз» зберігається до вильоту
+    clearTimeout(repSaveTimer);
+    repSaveTimer = setTimeout(() => { saveFlights(); syncEditor(); }, 400);
+    if (first) status('Звіт збережено до вильоту ' + hhmm(r.t) + ' · ↺ у редакторі поверне авто', 'ok');
+  });
+  $('#showair').checked = showAir;
+  $('#showair').addEventListener('change', () => { showAir = $('#showair').checked; store.set('kap_showair', showAir ? '1' : '0'); idbSet('kap_showair', showAir ? '1' : '0'); updatePreview(true); });
+  $('#previewbtn').addEventListener('click', () => {
+    const box = $('#previewbox');
+    box.hidden = !box.hidden;
+    if (!box.hidden) { previewEdited = false; updatePreview(true); }   // відкриваємо — підставляємо свіжий звіт
+  });
+  // живе оновлення, поки перегляд відкритий і не редагувався вручну
+  ['input', 'change', 'click'].forEach(ev =>
+    document.addEventListener(ev, () => { syncEditor(); if (!$('#previewbox').hidden) updatePreview(); }));
+
+  // ---- редактор звіту ----
+  function refreshReport() { saveFlights(); saveEvents(); renderStats(); updatePreview(true); }
+  function hhmm(ts) { const d = new Date(ts); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+  function tsFromTime(baseTs, val) {   // "HH:MM" на добі baseTs
+    const [h, m] = (val || '00:00').split(':').map(Number);
+    const d = new Date(baseTs);
+    d.setHours(h || 0, m || 0, 0, 0);
+    return d.getTime();
+  }
+  function recWindow() {
+    if (reportMode === 'shift') return shiftBounds();
+    const H = 3600e3, s = dayBounds();
+    if (reportMode === 'day') return [s, s + 12 * H];
+    if (reportMode === 'night') return [s + 12 * H, s + 24 * H];
+    return [Date.now() - 7 * DAY, Date.now() + DAY];   // тиждень
+  }
+  function uid() { return 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  // події зміни
+  function renderEvents() {
+    const [s, e] = shiftBounds();
+    const box = $('#evlist'); box.innerHTML = '';
+    const evs = events.filter(ev => ev.t >= s && ev.t < e).sort((a, b) => a.t - b.t);
+    evs.forEach(ev => {
+      const idx = events.indexOf(ev);
+      const it = document.createElement('div'); it.className = 'eitem';
+      const l1 = document.createElement('div'); l1.className = 'eline';
+      const tI = document.createElement('input'); tI.type = 'time'; tI.value = hhmm(ev.t);
+      const t2I = document.createElement('input'); t2I.type = 'time'; t2I.value = ev.t2 ? hhmm(ev.t2) : ''; t2I.title = 'Кінець (необовʼязково)';
+      const dI = document.createElement('input'); dI.type = 'text'; dI.value = ev.text || ''; dI.placeholder = 'Опис події'; dI.setAttribute('list', 'evhints');
+      const del = document.createElement('button'); del.className = 'edel'; del.textContent = '✕'; del.title = 'Видалити';
+      l1.append(tI, t2I, dI, del);
+      const l2 = document.createElement('div'); l2.className = 'eline';
+      const cI = document.createElement('input'); cI.type = 'text'; cI.value = ev.mgrs || ''; cI.placeholder = 'Координати (MGRS)';
+      l2.append(cI);
+      it.append(l1, l2); box.appendChild(it);
+
+      tI.addEventListener('change', () => {
+        let t = tsFromTime(s, tI.value);
+        if (t < s) t += DAY;                    // час після опівночі — другі доби зміни
+        events[idx].t = t; refreshReport(); renderEvents();
+      });
+      t2I.addEventListener('change', () => {
+        if (!t2I.value) { delete events[idx].t2; }
+        else { let t2 = tsFromTime(s, t2I.value); if (t2 < events[idx].t) t2 += DAY; events[idx].t2 = t2; }
+        refreshReport(); renderEvents();
+      });
+      dI.addEventListener('input', () => { events[idx].text = dI.value; refreshReport(); });
+      cI.addEventListener('input', () => { events[idx].mgrs = cI.value.trim(); refreshReport(); });
+      del.addEventListener('click', () => { events.splice(idx, 1); refreshReport(); renderEvents(); });
+    });
+  }
+  function addEvent() {
+    const [s, e] = shiftBounds();
+    const now = Date.now();
+    events.push({ t: (now >= s && now < e) ? now : s, text: '', mgrs: pickedCoords || '' });
+    refreshReport(); renderEvents();
+  }
+
+  // поля вильоту
+  function renderFieldPanel() {
+    const box = $('#fldlist'); box.innerHTML = '';
+    recFields.forEach((fd, i) => {
+      const row = document.createElement('div'); row.className = 'flditem';
+      const t = fd.type === 'number' ? 'число' : fd.type === 'select' ? 'список' : 'текст';
+      const sp = document.createElement('span'); sp.innerHTML = '<b>' + fd.name + '</b> · ' + t + (fd.opts && fd.opts.length ? ' (' + fd.opts.join(', ') + ')' : '');
+      const del = document.createElement('button'); del.className = 'edel'; del.textContent = '✕';
+      del.addEventListener('click', () => { recFields.splice(i, 1); saveFields(); renderFieldPanel(); renderRecs(); updatePreview(true); });
+      row.append(sp, del); box.appendChild(row);
+    });
+  }
+  $('#fldtype').addEventListener('change', () => { $('#fldopts').hidden = $('#fldtype').value !== 'select'; });
+  $('#fldtoggle').addEventListener('click', () => {
+    const p = $('#fldpanel'); p.hidden = !p.hidden;
+    $('#fldtoggle').textContent = 'Поля вильоту ' + (p.hidden ? '▾' : '▴');
+  });
+  $('#fldadd').addEventListener('click', () => {
+    const name = $('#fldname').value.trim(); if (!name) return;
+    const type = $('#fldtype').value;
+    const opts = type === 'select' ? $('#fldopts').value.split(',').map(s => s.trim()).filter(Boolean) : [];
+    if (type === 'select' && !opts.length) { status('Вкажіть варіанти списку', 'err'); return; }
+    recFields.push({ id: uid(), name, type, opts });
+    saveFields(); $('#fldname').value = ''; $('#fldopts').value = '';
+    renderFieldPanel(); renderRecs(); updatePreview(true);
+  });
+
+  // записи вильотів
+  function renderRecs() {
+    const [ws, we] = recWindow();
+    const box = $('#reclist'); box.innerHTML = '';
+    if (reportMode === 'current') {
+      const h = document.createElement('div'); h.className = 'ehint';
+      h.textContent = 'Усі вильоти за 7 діб. «○ у звіт» — відкрити звіт цього вильоту, ✎ — звіт правлений вручну (↺ повертає авто), ✕ — видалити виліт.';
+      box.appendChild(h);
+    }
+    const list = flights.filter(f => f.t >= ws && f.t < we).sort((a, b) => a.t - b.t);
+    list.forEach(f => {
+      const it = document.createElement('div'); it.className = 'eitem';
+      const l1 = document.createElement('div'); l1.className = 'eline';
+      const tI = document.createElement('input'); tI.type = 'time'; tI.value = hhmm(f.t);
+      const lI = document.createElement('input'); lI.type = 'time'; lI.value = f.lt ? hhmm(f.lt) : '';
+      const dur = document.createElement('span'); dur.className = 'rdur'; dur.textContent = f.lt ? fmt(f.lt - f.t) : '—';
+      const del = document.createElement('button'); del.className = 'edel'; del.textContent = '✕';
+      if (reportMode === 'current') {                       // «Зараз» — обрати, який виліт показувати у звіті
+        const pick = document.createElement('button');
+        const on = (curRecT != null ? f.t === curRecT : f === curRec());
+        pick.className = 'epick' + (on ? ' on' : '');
+        pick.textContent = (on ? '● у звіті' : '○ у звіт') + (f.rep ? ' ✎' : '');
+        pick.title = f.rep ? 'Відкрити збережений звіт цього вильоту' : 'Показати цей виліт у звіті «Зараз»';
+        pick.addEventListener('click', () => {
+          curRecT = f.t; previewEdited = false; updatePreview(true); renderRecs();
+          if ($('#previewbox').hidden) $('#previewbox').hidden = false;      // одразу показати звіт
+          status((f.rep ? 'Збережений звіт за виліт ' : 'Звіт «Зараз» за виліт ') + hhmm(f.t), 'ok');
+        });
+        if (f.rep) {                                            // повернути автоматичний текст
+          const undo = document.createElement('button');
+          undo.className = 'epick'; undo.textContent = '↺'; undo.title = 'Повернути автоматичний звіт';
+          undo.addEventListener('click', () => {
+            delete f.rep; saveFlights();
+            if (curRec() === f) { previewEdited = false; updatePreview(true); }
+            renderRecs(); status('Повернуто автоматичний звіт', 'ok');
+          });
+          l1.append(tI, lI, dur, pick, undo, del);
+        } else l1.append(tI, lI, dur, pick, del);
+      } else l1.append(tI, lI, dur, del);
+      const ta = document.createElement('textarea'); ta.value = f.c || ''; ta.placeholder = 'Коментар';
+      it.append(l1, ta);
+
+      for (const fd of recFields) {
+        const row = document.createElement('div'); row.className = 'rfld';
+        const lbl = document.createElement('span'); lbl.className = 'rlbl'; lbl.textContent = fd.name;
+        row.appendChild(lbl);
+        if (fd.type === 'select') {
+          const sel = document.createElement('select');
+          const o0 = document.createElement('option'); o0.value = ''; o0.textContent = '—'; sel.appendChild(o0);
+          (fd.opts || []).forEach(o => { const op = document.createElement('option'); op.value = o; op.textContent = o; sel.appendChild(op); });
+          sel.value = (f.x && f.x[fd.id]) || '';
+          sel.addEventListener('change', () => { f.x[fd.id] = sel.value; refreshReport(); });
+          row.appendChild(sel);
+        } else if (fd.type === 'number') {
+          const wrap = document.createElement('div'); wrap.className = 'step';
+          const minus = document.createElement('button'); minus.textContent = '−';
+          const val = document.createElement('span'); val.textContent = Number((f.x && f.x[fd.id]) || 0);
+          const plus = document.createElement('button'); plus.textContent = '+';
+          const upd = d => { const n = Math.max(0, Number(val.textContent) + d); val.textContent = n; f.x[fd.id] = n ? String(n) : ''; refreshReport(); };
+          minus.addEventListener('click', () => upd(-1));
+          plus.addEventListener('click', () => upd(1));
+          wrap.append(minus, val, plus); row.appendChild(wrap);
+        } else {
+          const inp = document.createElement('input'); inp.type = 'text'; inp.value = (f.x && f.x[fd.id]) || '';
+          inp.addEventListener('input', () => { f.x[fd.id] = inp.value; refreshReport(); });
+          row.appendChild(inp);
+        }
+        it.appendChild(row);
+      }
+      box.appendChild(it);
+
+      tI.addEventListener('change', () => { f.t = tsFromTime(f.t, tI.value); refreshReport(); renderRecs(); });
+      lI.addEventListener('change', () => {
+        if (!lI.value) { delete f.lt; } else {
+          let lt = tsFromTime(f.t, lI.value);
+          if (lt < f.t) lt += DAY;              // посадка після опівночі
+          f.lt = lt;
+        }
+        refreshReport(); renderRecs();
+      });
+      ta.addEventListener('input', () => { f.c = ta.value; refreshReport(); });
+      del.addEventListener('click', () => {
+        const i = flights.indexOf(f); if (i >= 0) flights.splice(i, 1);
+        if (curRecT === f.t) curRecT = null;                 // показували саме його — повертаємось до останнього
+        if (activeRec === f) { activeRec = null; if (flying) { flying = false; clearInterval(tick); tick = null; $('#takeoff').textContent = 'Взліт пішов'; $('#takeoff').classList.remove('flying'); $('#clock').classList.remove('live'); } }
+        refreshReport(); renderRecs();
+      });
+    });
+  }
+  function addRec() {
+    const [ws, we] = recWindow();
+    const now = Date.now();
+    flights.push({ t: (now >= ws && now < we) ? now : ws, c: '', x: {} });
+    refreshReport(); renderRecs();
+  }
+  $('#evadd').addEventListener('click', addEvent);
+  $('#recadd').addEventListener('click', addRec);
+
+  // налаштування зміни
+  $('#shiftstart').value = shiftStart;
+  $('#daystart').value = dayStart;
+  $('#daystart').addEventListener('change', () => { dayStart = $('#daystart').value || '06:00'; saveShiftCfg(); syncEditor(true); updatePreview(true); });
+  $('#shiftcode').value = shiftCode;
+  $('#sortiecount').value = sortieCount;
+  $('#scoutauto').checked = scoutAuto;
+  $('#scoutauto').addEventListener('change', () => { scoutAuto = $('#scoutauto').checked; saveShiftCfg(); updatePreview(true); });
+  $('#shiftstart').addEventListener('change', () => { shiftStart = $('#shiftstart').value || '16:00'; saveShiftCfg(); renderEditor(); updatePreview(true); });
+  $('#shiftcode').addEventListener('input', () => { shiftCode = $('#shiftcode').value.trim(); saveShiftCfg(); updatePreview(true); });
+  $('#sortiecount').addEventListener('input', () => { sortieCount = $('#sortiecount').value; saveShiftCfg(); updatePreview(true); });
+
+  // зведення денної/нічної зміни
+  function renderPairs(boxId, arr, ph) {
+    const box = $(boxId); box.innerHTML = '';
+    arr.forEach((it, i) => {
+      const row = document.createElement('div'); row.className = 'eline';
+      const n = document.createElement('input'); n.type = 'text'; n.value = it.name || ''; n.placeholder = ph;
+      const q = document.createElement('input'); q.type = 'number'; q.min = '0'; q.value = it.qty || 0; q.className = 'qty';
+      const del = document.createElement('button'); del.className = 'edel'; del.textContent = '✕';
+      n.addEventListener('input', () => { arr[i].name = n.value; saveDayCfg(); updatePreview(true); });
+      q.addEventListener('input', () => { arr[i].qty = Number(q.value) || 0; saveDayCfg(); updatePreview(true); });
+      del.addEventListener('click', () => { arr.splice(i, 1); saveDayCfg(); renderDayCfg(); updatePreview(true); });
+      row.append(n, q, del); box.appendChild(row);
+    });
+  }
+  function renderDayCfg() {
+    $('#dlost').value = dayCfg.lost || 0;
+    $('#ddmg').value = dayCfg.dmg || 0;
+    renderPairs('#proplist', dayCfg.props, 'Тип пропелера');
+    renderPairs('#dronelist', dayCfg.drones, 'Тип дрона');
+  }
+  $('#dlost').addEventListener('input', () => { dayCfg.lost = Number($('#dlost').value) || 0; saveDayCfg(); updatePreview(true); });
+  $('#ddmg').addEventListener('input', () => { dayCfg.dmg = Number($('#ddmg').value) || 0; saveDayCfg(); updatePreview(true); });
+  $('#propadd').addEventListener('click', () => { dayCfg.props.push({ name: '', qty: 0 }); saveDayCfg(); renderDayCfg(); });
+  $('#droneadd').addEventListener('click', () => { dayCfg.drones.push({ name: '', qty: 0 }); saveDayCfg(); renderDayCfg(); });
+
+  function renderEditor() {
+    const shift = reportMode === 'shift';
+    const dn = reportMode === 'day' || reportMode === 'night';
+    $('#shiftbox').hidden = !shift;
+    $('#daybox').hidden = !dn;
+    $('#recwrap').hidden = shift;
+    if (shift) {
+      const [s, e] = shiftBounds();
+      $('#sortiecount').placeholder = 'авто: ' + flights.filter(f => f.t >= s && f.t < e).length;
+      renderEvents();
+    } else {
+      if (dn) renderDayCfg();
+      renderFieldPanel(); renderRecs();
+    }
+    editorSig = editorSignature();
+  }
+  $('#editbtn').addEventListener('click', () => {
+    const box = $('#editorbox');
+    box.hidden = !box.hidden;
+    $('#editbtn').classList.toggle('on', !box.hidden);
+    if (!box.hidden) { renderEditor(); updatePreview(true); }   // «Зараз» теж редагується — список вильотів
+  });
+
+  // ---- живе оновлення редактора (нові вильоти / зовнішні зміни даних) ----
+  let editorSig = '', editorDirty = false;
+  function editorSignature() {
+    if (reportMode === 'shift') {
+      const [s, e] = shiftBounds();
+      return 'S|' + events.map(v => v.t + ':' + (v.t2 || 0) + ':' + (v.text || '').length + ':' + (v.mgrs || '').length).join(',') +
+             '|' + flights.filter(f => f.t >= s && f.t < e).length;
+    }
+    const [ws, we] = recWindow();
+    return 'R' + reportMode + '|' + recFields.map(f => f.id).join(',') + '|' +
+      flights.filter(f => f.t >= ws && f.t < we)
+             .map(f => f.t + ':' + (f.lt || 0) + ':' + (f.c || '').length + ':' + (f.mgrs || '').length + ':' + (f.rep ? 1 : 0) +
+                       ':' + Object.keys(f.x || {}).map(k => k + '=' + f.x[k]).join('+')).join(',');
+  }
+  function editorBusy() {
+    const a = document.activeElement;
+    return !!(a && $('#editorbox').contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+  }
+  // force=true — перемалювати безумовно; без force — лише якщо дані справді змінилися
+  function syncEditor(force) {
+    if ($('#editorbox').hidden) return;
+    const sig = editorSignature();
+    if (!force && sig === editorSig) return;
+    if (!force && editorBusy()) { editorDirty = true; return; }   // не перебивати введення
+    editorDirty = false;
+    renderEditor();
+  }
+  // зміни, зроблені в самому редакторі, не «зовнішні» — DOM уже актуальний, лише оновлюємо підпис
+  ['input', 'change', 'click'].forEach(ev =>
+    $('#editorbox').addEventListener(ev, () => { editorSig = editorSignature(); }));
+  // якщо оновлення прийшло, поки користувач друкував — застосувати після виходу з поля
+  $('#editorbox').addEventListener('focusout', () => {
+    if (!editorDirty) return;
+    setTimeout(() => { if (!editorBusy()) syncEditor(true); }, 0);
+  });
+
+  // ---- карта: вибір координат тапом, підстановка в коментар ----
+
+  // ---- карта (Leaflet): супутник/схема, GPS, компас ----
+  let lmap = null, gpsMarker = null, gpsCircle = null, northArrow = null;
+  let baseLayers = null, baseMap = store.get('kap_basemap') || 'sat';
+  let compassOn = false, headingRAF = null, targetHeading = null, heading = null;
+  let pickedCoords = '';                          // MGRS останньої точки — для подій звіту
+  let points = [], pointLayer = {};               // {id,lat,lng,name,color,mgrs}
+  const PT_COLORS = ['#c0392b', '#e67e22', '#f1c40f', '#1f7a1f', '#2980b9', '#8e44ad', '#111111', '#ffffff'];
+  function loadPoints() { try { const v = JSON.parse(store.get('kap_points') || 'null'); if (Array.isArray(v)) return v; } catch (e) {} return []; }
+  points = loadPoints();
+  function savePoints() { store.set('kap_points', JSON.stringify(points)); idbSet('kap_points', points); }
+  function ptMGRS(lat, lng) { try { return window.mgrs ? window.mgrs.forward([lng, lat]) : lat.toFixed(5) + ', ' + lng.toFixed(5); } catch (e) { return lat.toFixed(5) + ', ' + lng.toFixed(5); } }
+
+  function loadLeaflet() {
+    if (window.L) return Promise.resolve();
+    return new Promise((res, rej) => {
+      const css = document.createElement('link');
+      css.rel = 'stylesheet'; css.href = 'leaflet.css';
+      document.head.appendChild(css);
+      const js = document.createElement('script');
+      js.src = 'leaflet.js';
+      js.onload = res;
+      js.onerror = () => rej(new Error('Мапа не завантажилась (потрібен інтернет)'));
+      document.head.appendChild(js);
+    });
+  }
+  function applyBaseStyle() { const osm = baseMap === 'osm'; $('#mapview').classList.toggle('gray', osm); $('#mapwrap').classList.toggle('schema', osm); }
+
+  async function openMap() {
+    $('#mapwrap').hidden = false;
+    $('#mapcoords').textContent = 'Пошук GPS…';
+    try { await loadLeaflet(); }
+    catch (e) { $('#mapwrap').hidden = true; status(e.message, 'err'); return; }
+    const start = gpsMarker ? gpsMarker.getLatLng() : null;
+    if (!lmap) {
+      lmap = L.map('mapview', { zoomControl: true, attributionControl: false })
+              .setView(start ? [start.lat, start.lng] : [49.0, 32.0], start ? 15 : 6);
+      baseLayers = {
+        sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }),
+        osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 })
+      };
+      baseLayers[baseMap].addTo(lmap);
+      applyBaseStyle();
+      lmap.on('click', mapTapHandler);
+      lmap.on('movestart', closePointMenu);
+      drawAllPoints();
+    } else if (start) {
+      lmap.setView([start.lat, start.lng], Math.max(lmap.getZoom(), 15));
+    }
+    setTimeout(() => lmap.invalidateSize(), 60);
+    locate();   // одразу центруємо на поточній позиції
+  }
+  $('#map').addEventListener('click', openMap);
+  $('#mapcancel').addEventListener('click', () => { closeCoordPicker(); closePointMenu(); $('#mapwrap').hidden = true; });
+
+  function switchBase() {
+    if (!lmap || !baseLayers) return;
+    lmap.removeLayer(baseLayers[baseMap]);
+    baseMap = baseMap === 'sat' ? 'osm' : 'sat';
+    baseLayers[baseMap].addTo(lmap);
+    baseLayers[baseMap].bringToBack();
+    store.set('kap_basemap', baseMap); idbSet('kap_basemap', baseMap);
+    applyBaseStyle();
+    status(baseMap === 'sat' ? 'Супутник' : 'Схема (ч/б)', 'dim');
+  }
+  $('#maplayer').addEventListener('click', switchBase);
+
+  // ---- точки на карті ----
+  function drawPoint(p) {
+    if (pointLayer[p.id]) { lmap.removeLayer(pointLayer[p.id]); delete pointLayer[p.id]; }
+    const m = L.circleMarker([p.lat, p.lng], { radius: 9, color: '#fff', weight: 2, fillColor: p.color || '#c0392b', fillOpacity: 0.95 }).addTo(lmap);
+    m.bindTooltip(p.name || '', { permanent: !!p.name, direction: 'top', offset: [0, -8], className: 'ptlabel' });
+    m.on('click', (e) => {
+      if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+      mapTapHandler._sup = true;                    // не додавати нову точку від цього кліку
+      openPointMenu(p);                             // тап по точці — меню (назва/колір/у звіт/видалити)
+    });
+    pointLayer[p.id] = m;
+  }
+  function drawAllPoints() { if (!lmap) return; Object.values(pointLayer).forEach(m => lmap.removeLayer(m)); pointLayer = {}; points.forEach(drawPoint); }
+  function addPoint(lat, lng) {
+    const mgrs = ptMGRS(lat, lng);
+    const p = { id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), lat, lng, name: '', color: PT_COLORS[0], mgrs };
+    points.push(p); savePoints(); drawPoint(p);
+    status('Точку додано', 'ok');
+    return p;
+  }
+
+  // мапа: тап — додати точку (довге натискання по мапі не додає)
+  function mapTapHandler(e) {
+    if (mapTapHandler._sup) { mapTapHandler._sup = false; return; }
+    addPoint(e.latlng.lat, e.latlng.lng);
+    if (wxOn) refreshWx(e.latlng.lat, e.latlng.lng);
+  }
+
+  // ---- мініменю точки ----
+  function openPointMenu(p) {
+    closePointMenu();
+    const el = document.createElement('div'); el.id = 'ptmenu';
+    el.innerHTML =
+      '<input id="ptname" type="text" placeholder="Назва точки" value="' + (p.name || '').replace(/"/g, '&quot;') + '">' +
+      '<div id="ptcolors"></div>' +
+      '<div id="ptmgrs">' + p.mgrs + '</div>' +
+      '<div id="ptbtns"><button id="ptuse">У звіт</button><button id="ptdel">Видалити</button><button id="ptclose">Закрити</button></div>';
+    $('#mapwrap').appendChild(el);
+    const cw = el.querySelector('#ptcolors');
+    PT_COLORS.forEach(c => {
+      const b = document.createElement('button'); b.className = 'ptsw'; b.style.background = c;
+      if (c === p.color) b.classList.add('sel');
+      b.addEventListener('click', () => { p.color = c; savePoints(); drawPoint(p); cw.querySelectorAll('.ptsw').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); });
+      cw.appendChild(b);
+    });
+    el.querySelector('#ptname').addEventListener('input', ev => { p.name = ev.target.value; savePoints(); drawPoint(p); });
+    el.querySelector('#ptuse').addEventListener('click', () => {
+      pickedCoords = p.mgrs;
+      closePointMenu();
+      openCoordPicker(p.mgrs);          // другий крок — до якого шаблону підставити
+    });
+    el.querySelector('#ptdel').addEventListener('click', () => { const i = points.indexOf(p); if (i >= 0) points.splice(i, 1); if (pointLayer[p.id]) { lmap.removeLayer(pointLayer[p.id]); delete pointLayer[p.id]; } savePoints(); closePointMenu(); });
+    el.querySelector('#ptclose').addEventListener('click', closePointMenu);
+  }
+  function closePointMenu() { const m = document.getElementById('ptmenu'); if (m) m.remove(); }
+
+  // ---- координати → конкретний шаблон вильоту ----
+  const COORD_RE = /\s*за координатами\s+.*$/i;
+  function coordTargetFlight() { return activeRec || flights[flights.length - 1] || null; }
+  function attachCoordToLine(rec, idx, mgrs) {
+    const arr = (rec.c || '').split('\n');
+    arr[idx] = arr[idx].replace(COORD_RE, '').replace(/\s+$/, '') + ' за координатами ' + mgrs;
+    rec.c = arr.join('\n');
+    if (rec === activeRec) $('#comments').value = rec.c;   // приховане поле — джерело для наступних шаблонів
+    saveFlights(); syncEditor(); updatePreview(true);
+  }
+  function closeCoordPicker() { const m = document.getElementById('ptpick'); if (m) m.remove(); }
+  function openCoordPicker(mgrs) {
+    closeCoordPicker();
+    const rec = coordTargetFlight();
+    if (!rec) { status('Немає вильоту — спершу «Взліт»', 'err'); return; }
+    const arr = (rec.c || '').split('\n');
+    const items = [];
+    arr.forEach((l, i) => {
+      const body = l.trim().replace(TIME_RE, '');
+      if (body && !isCoord(body)) items.push({ i, body });
+    });
+
+    const box = document.createElement('div'); box.id = 'ptpick';
+    const h = document.createElement('div'); h.className = 'pph'; h.textContent = 'Підставити координати до:';
+    const c = document.createElement('div'); c.className = 'ppc'; c.textContent = mgrs + ' · виліт ' + hm(rec.t);
+    const list = document.createElement('div'); list.className = 'pplist';
+    if (!items.length) {
+      const em = document.createElement('div'); em.className = 'ppc';
+      em.textContent = 'У цьому вильоті ще немає шаблонів. Додайте шаблон на головному екрані або підставте координати до вильоту загалом.';
+      list.appendChild(em);
+    }
+    items.forEach(it => {
+      const b = document.createElement('button');
+      if (COORD_RE.test(it.body)) b.className = 'has';        // до цього рядка координати вже підставлені
+      b.textContent = it.body;
+      b.addEventListener('click', () => {
+        attachCoordToLine(rec, it.i, mgrs);
+        status('✓ Координати до «' + it.body.replace(COORD_RE, '') + '»', 'ok');
+        closeCoordPicker();
+      });
+      list.appendChild(b);
+    });
+    const foot = document.createElement('div'); foot.className = 'ppfoot';
+    const all = document.createElement('button'); all.id = 'ppall'; all.textContent = 'До вильоту';
+    all.addEventListener('click', () => {
+      rec.mgrs = mgrs; saveFlights(); syncEditor(); updatePreview(true);
+      status('✓ Координати у звіт: ' + mgrs, 'ok'); closeCoordPicker();
+    });
+    const cl = document.createElement('button'); cl.textContent = 'Закрити';
+    cl.addEventListener('click', closeCoordPicker);
+    foot.append(all, cl);
+    box.append(h, c, list, foot);
+    $('#mapwrap').appendChild(box);
+  }
+
+
+  // ---- геолокація ----
+  function showMGRS(lat, lng) {
+    try { $('#mapcoords').textContent = window.mgrs ? window.mgrs.forward([lng, lat]) : lat.toFixed(5) + ', ' + lng.toFixed(5); }
+    catch (e) { $('#mapcoords').textContent = lat.toFixed(5) + ', ' + lng.toFixed(5); }
+  }
+  function drawGps(lat, lng, acc) {
+    if (!lmap) return;
+    if (!gpsMarker) gpsMarker = L.circleMarker([lat, lng], { radius: 7, color: '#1f7a1f', weight: 2, fillColor: '#1f7a1f', fillOpacity: 0.85 }).addTo(lmap);
+    else gpsMarker.setLatLng([lat, lng]);
+    if (acc && acc < 3000) {
+      if (!gpsCircle) gpsCircle = L.circle([lat, lng], { radius: acc, color: '#1f7a1f', weight: 1, fillOpacity: 0.08 }).addTo(lmap);
+      else gpsCircle.setLatLng([lat, lng]).setRadius(acc);
+    }
+    showMGRS(lat, lng);
+    updateNorthArrow();
+  }
+  function locate() {
+    if (!navigator.geolocation) { $('#mapcoords').textContent = ''; status('Геолокація недоступна', 'err'); return; }
+    navigator.geolocation.getCurrentPosition(
+      p => { const { latitude, longitude, accuracy } = p.coords; drawGps(latitude, longitude, accuracy); lmap.setView([latitude, longitude], Math.max(lmap.getZoom(), 15)); refreshWx(latitude, longitude); wxAuto(true); },
+      () => { if ($('#mapcoords').textContent === 'Пошук GPS…') $('#mapcoords').textContent = ''; status('Не вдалося визначити місце', 'err'); },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 });
+  }
+  $('#mapgps').addEventListener('click', locate);
+
+  // ---- погода на карті (Open-Meteo, без ключа) ----
+  let wxOn = false, wxLL = null;
+  const WMO = { 0:'Ясно', 1:'Переважно ясно', 2:'Мінлива хмарність', 3:'Хмарно',
+    45:'Туман', 48:'Паморозь', 51:'Мряка', 53:'Мряка', 55:'Мряка',
+    61:'Невеликий дощ', 63:'Дощ', 65:'Сильний дощ', 66:'Крижаний дощ', 67:'Крижаний дощ',
+    71:'Невеликий сніг', 73:'Сніг', 75:'Сильний сніг', 77:'Снігова крупа',
+    80:'Зливи', 81:'Зливи', 82:'Сильні зливи', 85:'Снігопад', 86:'Снігопад',
+    95:'Гроза', 96:'Гроза з градом', 99:'Гроза з градом' };
+  const dir16 = d => ['Пн','ПнСх','ПнСх','Сх','Сх','ПдСх','ПдСх','Пд','Пд','ПдЗх','ПдЗх','Зх','Зх','ПнЗх','ПнЗх','Пн'][Math.round(((d%360)+360)%360/22.5)%16];
+  async function loadWx(lat, lng) {
+    const u = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat.toFixed(4) + '&longitude=' + lng.toFixed(4) +
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m' +
+      '&wind_speed_unit=ms&timezone=auto';
+    const r = await fetch(u); if (!r.ok) throw new Error('wx');
+    return (await r.json()).current;
+  }
+  function renderWx(c, lat, lng) {
+    const p = $('#wxpanel');
+    const wd = Math.round(c.wind_direction_10m || 0);
+    const desc = WMO[c.weather_code] || '—';
+    const prec = c.precipitation || 0;
+    p.innerHTML =
+      '<div class="wxrow"><span class="wxtemp">' + Math.round(c.temperature_2m) + '°</span>' +
+      '<span>' + desc + '</span></div>' +
+      '<div class="wxrow" style="margin-top:6px">' +
+        '<span class="wxi">💨 <span class="wxarrow" style="transform:rotate(' + wd + 'deg)">↑</span> ' +
+          (c.wind_speed_10m || 0).toFixed(1) + ' м/с (' + wd + '° ' + dir16(wd) + ')</span>' +
+        '<span class="wxi">пориви ' + Math.round(c.wind_gusts_10m || 0) + ' м/с</span>' +
+        '<span class="wxi">💧 ' + prec.toFixed(1) + ' мм</span>' +
+      '</div>' +
+      '<div class="wxsub">Відчувається ' + Math.round(c.apparent_temperature) + '° · вологість ' + Math.round(c.relative_humidity_2m) + '% · за точкою ' + lat.toFixed(3) + ', ' + lng.toFixed(3) + '</div>';
+    p.hidden = false;
+  }
+  async function refreshWx(lat, lng) {
+    if (!wxOn) return;
+    const mk = (lat != null) ? { lat, lng } : (gpsMarker ? gpsMarker.getLatLng() : (lmap ? lmap.getCenter() : null));
+    if (!mk) return;
+    wxLL = mk;
+    $('#wxpanel').hidden = false; $('#wxpanel').innerHTML = '<div class="wxsub">Погода: завантаження…</div>';
+    try { renderWx(await loadWx(mk.lat, mk.lng), mk.lat, mk.lng); }
+    catch (e) { $('#wxpanel').innerHTML = '<div class="wxsub">Погода недоступна (потрібен інтернет)</div>'; }
+  }
+  $('#mapwx').addEventListener('click', () => {
+    wxOn = !wxOn;
+    $('#mapwx').classList.toggle('on', wxOn);
+    $('#wxpanel').hidden = !wxOn;
+    if (wxOn) refreshWx();
+  });
+
+  // ---- погода на головному екрані (за замовчуванням) ----
+  const WX_TTL = 15 * 60 * 1000;              // свіжість даних
+  let wxBusy = false;
+  function loadWxCache() { try { const v = JSON.parse(store.get('kap_wxcache') || 'null'); return (v && v.c) ? v : null; } catch (e) { return null; } }
+  function saveWxCache(o) { store.set('kap_wxcache', JSON.stringify(o)); idbSet('kap_wxcache', o); }
+  function renderWxHome(o) {
+    const el = $('#wxhome'); if (!el) return;
+    el.hidden = false; el.className = '';
+    if (!o || !o.c) { el.className = 'msg'; el.textContent = 'Погода: тап, щоб визначити'; return; }
+    const c = o.c, wd = Math.round(c.wind_direction_10m || 0);
+    const old = Date.now() - (o.ts || 0) > 60 * 60 * 1000;
+    // один рядок: температура і цифри фіксовані, опис стискається з трикрапкою
+    el.innerHTML =
+      '<span class="wxt">' + Math.round(c.temperature_2m) + '°</span>' +
+      '<span class="wxd">' + (WMO[c.weather_code] || '—') + (old ? ' (' + hm(o.ts) + ')' : '') + '</span>' +
+      '<span class="wxf">💨 ' + (c.wind_speed_10m || 0).toFixed(1) + '/' + Math.round(c.wind_gusts_10m || 0) + ' м/с ' + dir16(wd) + '</span>' +
+      '<span class="wxf">💧 ' + (c.precipitation || 0).toFixed(1) + '</span>';
+    el.title = 'Вітер ' + (c.wind_speed_10m || 0).toFixed(1) + ' м/с, пориви ' + Math.round(c.wind_gusts_10m || 0) +
+               ' м/с, напрямок ' + wd + '° ' + dir16(wd) + ' · опади ' + (c.precipitation || 0).toFixed(1) + ' мм' +
+               ' · відчувається ' + Math.round(c.apparent_temperature) + '° · вологість ' + Math.round(c.relative_humidity_2m) + '%' +
+               ' · дані за ' + hm(o.ts) + ' — тап, щоб оновити';
+  }
+  function wxCoords() {
+    if (gpsMarker) { const g = gpsMarker.getLatLng(); return { lat: g.lat, lng: g.lng }; }
+    const cch = loadWxCache();
+    if (cch && cch.lat != null) return { lat: cch.lat, lng: cch.lng };
+    if (points.length) { const p = points[points.length - 1]; return { lat: p.lat, lng: p.lng }; }
+    return null;
+  }
+  function wxLocate() {
+    return new Promise(res => {
+      if (!navigator.geolocation) return res(null);
+      navigator.geolocation.getCurrentPosition(
+        p => res({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        () => res(null),
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 });
+    });
+  }
+  // Погода тягнеться сама: спершу кеш (миттєво, працює офлайн), далі — поточний GPS.
+  // force=true — тап користувача: оновити попри свіжий кеш.
+  async function wxAuto(force) {
+    if (wxBusy) return;
+    const cch = loadWxCache();
+    if (cch) renderWxHome(cch);
+    let ll = null;
+    if (gpsMarker) { const g = gpsMarker.getLatLng(); ll = { lat: g.lat, lng: g.lng }; }
+    if (!ll) ll = await wxLocate();          // завжди пробуємо поточні координати
+    if (!ll) ll = wxCoords();                // GPS недоступний — остання відома позиція / точка на карті
+    if (!ll) {
+      if (!cch) { const el = $('#wxhome'); el.hidden = false; el.className = 'msg'; el.textContent = 'Погода: очікую GPS — тап, щоб повторити'; }
+      return;
+    }
+    const moved = cch && (Math.abs((cch.lat || 0) - ll.lat) > 0.05 || Math.abs((cch.lng || 0) - ll.lng) > 0.05);
+    if (!force && cch && !moved && Date.now() - (cch.ts || 0) < WX_TTL) return;   // дані свіжі й позиція та сама
+    wxBusy = true;
+    const el = $('#wxhome'); el.hidden = false;
+    if (!cch) { el.className = 'msg'; el.textContent = 'Погода: завантаження…'; }
+    try {
+      const o = { c: await loadWx(ll.lat, ll.lng), lat: ll.lat, lng: ll.lng, ts: Date.now() };
+      saveWxCache(o); renderWxHome(o);
+    } catch (e) {
+      if (cch) renderWxHome(cch);
+      else { el.className = 'err'; el.textContent = 'Погода недоступна (потрібен інтернет) — тап, щоб повторити'; }
+    } finally { wxBusy = false; }
+  }
+  $('#wxhome').addEventListener('click', () => wxAuto(true));
+  wxAuto();
+  setInterval(() => { if (document.visibilityState === 'visible') wxAuto(); }, WX_TTL);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') wxAuto(); });
+
+  // ---- компас (стрілка на північ + курс) ----
+  function updateNorthArrow() {
+    if (!lmap || !gpsMarker) return;
+    const p = gpsMarker.getLatLng();
+    if (!compassOn) { if (northArrow) { lmap.removeLayer(northArrow); northArrow = null; } $('#mapbearing').textContent = ''; return; }
+    const h = heading == null ? 0 : heading;
+    // стрілка вказує на північ відносно поточного курсу пристрою
+    const R = 0.0008, ang = (-h) * Math.PI / 180;
+    const tip = [p.lat + R * Math.cos(ang), p.lng + R * Math.sin(ang) / Math.cos(p.lat * Math.PI / 180)];
+    if (!northArrow) northArrow = L.polyline([[p.lat, p.lng], tip], { color: '#c0392b', weight: 3 }).addTo(lmap);
+    else northArrow.setLatLngs([[p.lat, p.lng], tip]);
+    $('#mapbearing').textContent = ' · курс ' + Math.round(h) + '°';
+  }
+  function onOrient(e) {
+    let h = null;
+    if (typeof e.webkitCompassHeading === 'number') h = e.webkitCompassHeading;       // iOS
+    else if (typeof e.alpha === 'number') h = 360 - e.alpha;                           // Android
+    if (h != null && !isNaN(h)) { targetHeading = (h + 360) % 360; if (!headingRAF) headingLoop(); }
+  }
+  function headingLoop() {
+    headingRAF = requestAnimationFrame(headingLoop);
+    if (targetHeading == null) return;
+    if (heading == null) heading = targetHeading;
+    const d = ((targetHeading - heading + 540) % 360) - 180;   // найкоротший кут
+    heading = (heading + d * 0.16 + 360) % 360;                 // плавне згладжування
+    if (Math.abs(d) < 0.05) heading = targetHeading;
+    if (compassOn) updateNorthArrow();
+  }
+  async function toggleCompass() {
+    compassOn = !compassOn;
+    $('#mapcompass').classList.toggle('on', compassOn);
+    if (compassOn) {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try { const r = await DeviceOrientationEvent.requestPermission(); if (r !== 'granted') { compassOn = false; $('#mapcompass').classList.remove('on'); status('Немає доступу до компаса', 'err'); return; } } catch (e) {}
+      }
+      window.addEventListener('deviceorientationabsolute', onOrient, true);
+      window.addEventListener('deviceorientation', onOrient, true);
+      if (!gpsMarker) locate();
+      status('Компас увімкнено', 'dim');
+    } else {
+      window.removeEventListener('deviceorientationabsolute', onOrient, true);
+      window.removeEventListener('deviceorientation', onOrient, true);
+      updateNorthArrow();
+    }
+  }
+  $('#mapcompass').addEventListener('click', toggleCompass);
+
+  // ---- PWA: service worker + кероване оновлення (за запитом) ----
+  function promptUpdate(worker) {
+    if (!worker) return;
+    try {
+      const mc = new MessageChannel();
+      mc.port1.onmessage = ev => {
+        const d = ev.data || {};
+        $('#upver').textContent = 'Доступне оновлення' + (d.version ? ' · ' + d.version : '');
+        $('#upnotes').textContent = (d.notes || []).map(n => '• ' + n).join('\n');
+      };
+      worker.postMessage({ type: 'getVersion' }, [mc.port2]);
+    } catch (e) {}
+    $('#update').hidden = false;
+    $('#upyes').onclick = () => { $('#upyes').disabled = true; $('#upver').textContent = 'Оновлення…'; worker.postMessage('skipWaiting'); };
+    $('#upno').onclick = () => { $('#update').hidden = true; };
+  }
+  if ('serviceWorker' in navigator) {
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloading) return;   // перший запуск — без перезавантаження
+      reloading = true; location.reload();
+    });
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        if (reg.waiting && navigator.serviceWorker.controller) promptUpdate(reg.waiting);
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (nw) nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) promptUpdate(reg.waiting || nw);
+          });
+        });
+        setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);  // тиха перевірка наявності оновлення
+      }).catch(() => {});
+    });
+  }
+  // ---- встановлення PWA (на будь-який пристрій; iOS — через інструкцію) ----
+  let deferredPrompt = null;
+  const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  // показуємо кнопку всюди, де застосунок ще не запущено як встановлений
+  document.body.classList.toggle('installed', isStandalone);
+  if (!isStandalone) { $('#install').hidden = false; $('#icontoggle').hidden = false; }
+  else document.body.classList.add('installed');
+
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; $('#install').hidden = false; $('#icontoggle').hidden = false; document.body.classList.remove('installed'); });
+
+  $('#install').addEventListener('click', async () => {
+    if (deferredPrompt) {                       // Chrome/Edge/Android — рідний діалог
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      status(outcome === 'accepted' ? '✓ Встановлюється…' : 'Скасовано', outcome === 'accepted' ? 'ok' : 'dim');
+      return;
+    }
+    // інакше — інструкція (iOS Safari, або браузер без авто-промпта)
+    $('#hhtext').textContent = isIOS
+      ? 'Safari: натисни «Поділитися» (квадрат зі стрілкою вгору) унизу екрана → «На початковий екран» (Add to Home Screen).'
+      : 'Меню браузера (⋮ або ⠇) → «Встановити застосунок» / «Add to Home screen». Можна встановити на кожен пристрій окремо.';
+    $('#installhelp').hidden = false;
+  });
+  $('#hhok').addEventListener('click', () => { $('#installhelp').hidden = true; });
+  window.addEventListener('appinstalled', () => { $('#install').hidden = true; $('#icontoggle').hidden = true; $('#iconbox').hidden = true; $('#installhelp').hidden = true; document.body.classList.add('installed'); status('✓ Встановлено', 'ok'); });
+
+  // ---- скидання зміни (подвійне натискання для підтвердження) ----
+  let resetCount = 0, resetTimer = null;
+  $('#reset').addEventListener('click', () => {
+    resetCount++;
+    clearTimeout(resetTimer);
+    if (resetCount < 3) {
+      $('#reset').classList.add('confirm');
+      const left = 3 - resetCount;
+      status('Натисніть ще ' + left + (left === 1 ? ' раз' : ' рази') + ', щоб обнулити зміну.', 'dim');
+      resetTimer = setTimeout(() => { resetCount = 0; $('#reset').classList.remove('confirm'); }, 4000);
+      return;
+    }
+    resetCount = 0;
+    $('#reset').classList.remove('confirm');
+    flights = []; activeRec = null; saveFlights(); renderStats(); syncEditor(true);
+    status('✓ Зміну скинуто', 'ok');
+  });
+
+  // ---- сохранение перед обновлением/закрытием страницы ----
+  function flush() {
+    const f = JSON.stringify(flights);
+    const nm = $('#callsign').value;
+    store.set('kap_flights', f); store.set('kap_name', nm); store.set('kap_reportmode', reportMode);
+    idbSet('kap_flights', flights); idbSet('kap_name', nm); idbSet('kap_reportmode', reportMode);
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+  window.addEventListener('pagehide', flush);
+  window.addEventListener('beforeunload', flush);
+
+  // ---- загрузка из IndexedDB (приоритет у более полной записи) ----
+  (async function initDB() {
+    try {
+      const [f, nm, rm] = await Promise.all([idbGet('kap_flights'), idbGet('kap_name'), idbGet('kap_reportmode')]);
+      const tpl = await idbGet('kap_templates');
+      const [ld, fl, ev, ss, sc, so] = await Promise.all([
+        idbGet('kap_leader'), idbGet('kap_fields'), idbGet('kap_events'),
+        idbGet('kap_shiftstart'), idbGet('kap_shiftcode'), idbGet('kap_sorties')]);
+      if (Array.isArray(f) && f.length >= flights.length) {
+        flights = f.map(normFlight);
+      }
+      if (Array.isArray(tpl) && !store.get('kap_templates')) { templates = tpl; renderTemplates(); }
+      if (typeof nm === 'string' && !store.get('kap_name')) $('#callsign').value = nm;
+      if (typeof ld === 'string' && !store.get('kap_leader')) $('#leader').value = ld;
+      if (Array.isArray(fl) && !store.get('kap_fields')) recFields = fl;
+      if (Array.isArray(ev) && ev.length >= events.length) events = ev;
+      if (typeof ss === 'string' && !store.get('kap_shiftstart')) shiftStart = ss;
+      if (typeof sc === 'string' && !store.get('kap_shiftcode')) shiftCode = sc;
+      if (typeof so === 'string' && !store.get('kap_sorties')) sortieCount = so;
+      const dc = await idbGet('kap_daycfg');
+      if (dc && typeof dc === 'object' && !store.get('kap_daycfg')) dayCfg = Object.assign(dayCfg, dc);
+      const bmap = await idbGet('kap_basemap');
+      if ((bmap === 'sat' || bmap === 'osm') && !store.get('kap_basemap')) baseMap = bmap;
+      const pts = await idbGet('kap_points');
+      if (Array.isArray(pts) && pts.length >= points.length) { points = pts; if (lmap) drawAllPoints(); }
+      const ic = await idbGet('kap_icon');
+      if (ic && ic.i192 && ic.i512 && !store.get('kap_icon')) { customIcon = ic; applyIcon(); }
+      const bm = await idbGet('kap_basemap');
+      if ((bm === 'sat' || bm === 'osm') && !store.get('kap_basemap')) baseMap = bm;
+    } catch (e) {}
+    nameToggleLabel(); saveFlights(); saveEvents(); renderStats();
+    syncEditor(true); if (!previewEdited) updatePreview(true);
+  })();
+
+  saveFlights(); renderStats(); updatePreview(true);
+  setInterval(() => { saveFlights(); renderStats(); syncEditor(); if (!previewEdited) updatePreview(true); }, 60000);
+</script>
+
+</body>
+</html>
