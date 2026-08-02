@@ -1044,20 +1044,11 @@ Object.defineProperty(exports, '__esModule', { value: true });
   #voice.on { color:var(--err); }
   #voice.on::before { animation:vpulse 1s ease-in-out infinite; }
   @keyframes vpulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-  #vhelp::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%2210%22%2F%3E%3Cpath%20d%3D%22M9.1%209a3%203%200%200%201%205.8%201c0%202-3%203-3%203%22%2F%3E%3Cline%20x1%3D%2212%22%20y1%3D%2217%22%20x2%3D%2212%22%20y2%3D%2217.01%22%2F%3E%3C%2Fsvg%3E"); }
-  #vhelpbox { position:fixed; inset:0; z-index:2100; background:rgba(0,0,0,.45);
-              display:flex; align-items:center; justify-content:center; padding:20px; }
-  #vhelpbox[hidden] { display:none; }
-  #vhelpbox .card { background:#fff; border:1px solid var(--line); max-width:440px; width:100%;
-                    padding:20px; max-height:85vh; overflow-y:auto; }
-  #vhelpbox .hh { font-weight:800; letter-spacing:.5px; text-transform:uppercase; margin-bottom:14px; }
   .vcmds { margin:0; }
   .vcmds dt { font-weight:700; font-size:13px; margin-top:10px; }
   .vcmds dt:first-child { margin-top:0; }
   .vcmds dd { margin:2px 0 0; font-size:13px; color:var(--dim); }
   .vnote { font-size:12px; color:var(--dim); margin:16px 0 14px; line-height:1.5; }
-  #vhelpbox #vhok { width:100%; border:none; background:transparent; font:inherit; font-weight:700; padding:12px; cursor:pointer; }
-  #vhok { width:100%; border:none; background:transparent; color:var(--fg); font:inherit; font-weight:700; padding:12px; cursor:pointer; }
   #install { position:fixed; top:max(6px, env(safe-area-inset-top)); right:max(8px, env(safe-area-inset-right));
              z-index:50; width:40px; height:40px; padding:0;
              background:transparent; border:none; color:var(--fg);
@@ -1113,14 +1104,10 @@ Object.defineProperty(exports, '__esModule', { value: true });
   .tpladd { display:flex; flex-direction:column; gap:8px; margin:0 0 10px; }
   .tpladd[hidden] { display:none; }
   .tplicons { display:flex; align-items:center; justify-content:center; gap:18px; }
-  #tplshare { font-size:0; padding:6px 0; -webkit-tap-highlight-color:transparent; outline:none; }
   #copy { font-size:0; padding:6px 0; -webkit-tap-highlight-color:transparent; outline:none; }
   #copy::before { content:""; display:inline-block; width:22px; height:22px; background-color:var(--dim);
                   -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%229%22%20width%3D%2211%22%20height%3D%2211%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M5%2015H4a2%202%200%200%201-2-2V4a2%202%200%200%201%202-2h9a2%202%200%200%201%202%202v1%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%229%22%20width%3D%2211%22%20height%3D%2211%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M5%2015H4a2%202%200%200%201-2-2V4a2%202%200%200%201%202-2h9a2%202%200%200%201%202%202v1%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; }
   #copy:active { opacity:.5; }
-  #tplshare::before { content:""; display:inline-block; width:22px; height:22px; background-color:var(--dim);
-                      -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%225%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2219%22%20r%3D%223%22%2F%3E%3Cline%20x1%3D%228.6%22%20y1%3D%2213.5%22%20x2%3D%2215.4%22%20y2%3D%2217.5%22%2F%3E%3Cline%20x1%3D%2215.4%22%20y1%3D%226.5%22%20x2%3D%228.6%22%20y2%3D%2210.5%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%225%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2219%22%20r%3D%223%22%2F%3E%3Cline%20x1%3D%228.6%22%20y1%3D%2213.5%22%20x2%3D%2215.4%22%20y2%3D%2217.5%22%2F%3E%3Cline%20x1%3D%2215.4%22%20y1%3D%226.5%22%20x2%3D%228.6%22%20y2%3D%2210.5%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat; }
-  #tplshare:active { opacity:.5; }
   .tplnewrow { display:flex; gap:8px; }
   .tpladd input { flex:1; }
   .tplnewrow button { padding:6px 12px; }
@@ -1226,7 +1213,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
   <div class="tplbar">
     <div class="tplicons">
       <button id="tpltoggle" class="tpltoggle" title="Шаблони"></button>
-      <button id="tplshare" class="tpltoggle" title="Поділитися шаблонами"></button>
       <button id="copy" class="tpltoggle" title="Скопіювати звіт"></button>
     </div>
     <div id="tpls" class="tpls" hidden></div>
@@ -1262,7 +1248,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
       <button id="map" title="Карта">Карта</button>
       <button id="alarm" title="Будильник">Будильник</button>
       <button id="voice" title="Голосове керування">Голос</button>
-      <button id="vhelp" title="Голосові команди">Команди</button>
     </div>
   </div>
 
@@ -1361,25 +1346,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
   <div id="status" class="dim"></div>
 </main>
 
-<div id="vhelpbox" hidden>
-  <div class="card">
-    <div class="hh">Голосові команди</div>
-    <dl class="vcmds">
-      <dt>«Взліт» · «зліт» · «старт»</dt><dd>почати виліт (запуск таймера)</dd>
-      <dt>«Сів» · «посадка» · «стоп»</dt><dd>завершити виліт (посадка)</dd>
-      <dt>«Поділитися» · «надіслати»</dt><dd>надіслати звіт</dd>
-      <dt>«Копіювати»</dt><dd>скопіювати звіт у буфер</dd>
-      <dt>«Звіт» · «перегляд»</dt><dd>відкрити/сховати перегляд звіту</dd>
-      <dt>«Карта» · «мапа»</dt><dd>відкрити карту</dd>
-      <dt>«Скинути»</dt><dd>скинути зміну (скажіть двічі — підтвердження)</dd>
-      <dt>«Зараз» · «День» · «Ніч» · «Доба» · «Тиждень»</dt><dd>обрати режим звіту</dd>
-      <dt>«Коментар …»</dt><dd>додати продиктований коментар (текст після слова)</dd>
-    </dl>
-    <p class="vnote">Тапніть 🎤, дозвольте мікрофон і говоріть. Працює в Chrome/Android, потрібен інтернет. Розпізнане показується в рядку статусу.</p>
-    <button id="vhok">Зрозуміло</button>
-  </div>
-</div>
-
 <div id="mapwrap" hidden>
   <div id="mapview"></div>
   <div id="mapinfo"><span id="mapcoords"></span><span id="mapbearing"></span></div>
@@ -1403,11 +1369,12 @@ Object.defineProperty(exports, '__esModule', { value: true });
 </div>
 
 
-<button id="guide" title="Інструкція"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h7M8 11h7"/></svg></button>
+<button id="guide" title="Інструкція"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg></button>
 
 <div id="guidebox" hidden>
   <div class="card">
     <div class="hh">Як скласти й надіслати звіт</div>
+    <p id="appver" style="font-size:12px;color:var(--dim);margin:-8px 0 12px"></p>
 
     <div class="gsec">1 · Налаштування</div>
     <p>Розгорніть <b>«Назва ▾»</b> та вкажіть назву позиції (напр. Капібара) і позивний старшого групи. Зберігається автоматично.</p>
@@ -1428,6 +1395,20 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
     <div class="gsec">6 · Карта</div>
     <p>Кнопка <b>мітка</b> — супутникова карта. <b>◎</b> — GPS, <b>◧</b> — супутник/схема, <b>⇧</b> — компас. Тап по мапі ставить точку; довге натискання по точці — мініменю (назва, колір, видалити). Координати точки (MGRS) підставляються в нову подію звіту, або кнопкою «У звіт».</p>
+
+    <div class="gsec">7 · Голосові команди <span class="gic">🎤</span></div>
+    <p>Тапніть <b>мікрофон</b>, дозвольте доступ і говоріть. Працює в Chrome/Android, потрібен інтернет. Розпізнане показується в рядку статусу.</p>
+    <dl class="vcmds">
+      <dt>«Взліт» · «зліт» · «старт»</dt><dd>почати виліт (запуск таймера)</dd>
+      <dt>«Сів» · «посадка» · «стоп»</dt><dd>завершити виліт (посадка)</dd>
+      <dt>«Поділитися» · «надіслати»</dt><dd>надіслати звіт</dd>
+      <dt>«Копіювати»</dt><dd>скопіювати звіт у буфер</dd>
+      <dt>«Звіт» · «перегляд»</dt><dd>відкрити/сховати перегляд звіту</dd>
+      <dt>«Карта» · «мапа»</dt><dd>відкрити карту</dd>
+      <dt>«Скинути»</dt><dd>скинути зміну (скажіть двічі — підтвердження)</dd>
+      <dt>«Зараз» · «День» · «Ніч» · «Доба» · «Тиждень»</dt><dd>обрати режим звіту</dd>
+      <dt>«Коментар …»</dt><dd>додати продиктований коментар (текст після слова)</dd>
+    </dl>
 
     <p class="gnote">Дані зберігаються лише на цьому пристрої (офлайн). Вильоти зберігаються 8 діб. «Скинути зміну» очищає список вильотів — натисніть двічі для підтвердження.</p>
     <button id="guideok">Зрозуміло</button>
@@ -1707,6 +1688,8 @@ Object.defineProperty(exports, '__esModule', { value: true });
     ta.value = cur ? (cur + '\n' + stamped) : stamped;
     ta.dispatchEvent(new Event('input'));   // привязка к вылету + сохранение
     ta.focus();
+    // втрата дрона / аварійна посадка — виліт завершено, повертаємо кнопку в початковий стан
+    if (flying && LAND_RE.test(body)) { landing(); status('Виліт завершено: ' + body, 'ok'); }
   }
 
   let tplEdit = false, tplOpen = false;
@@ -1760,15 +1743,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
   $('#tplnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTemplate(); } });
 
   // ---- поділитися шаблонами (перенос між своїми пристроями) ----
-  $('#tplshare').addEventListener('click', async () => {
-    if (!templates.length) { status('Немає шаблонів', 'dim'); return; }
-    const text = templates.join('\n');
-    try {
-      if (navigator.share) { await navigator.share({ title: 'Шаблони Reports', text }); return; }
-    } catch (e) { if (e && e.name === 'AbortError') return; }
-    try { await navigator.clipboard.writeText(text); status('✓ Шаблони скопійовано (' + templates.length + ')', 'ok'); }
-    catch (e) { window.prompt('Скопіюй шаблони:', text); }
-  });
   $('#tpltoggle').addEventListener('click', () => {
     tplOpen = !tplOpen;
     $('#tpladd').hidden = true;               // поле створення завжди приховане — відкривається лише кнопкою «+»
@@ -1869,7 +1843,11 @@ Object.defineProperty(exports, '__esModule', { value: true });
     status('✓ Іконку змінено. Встановіть застосунок, щоб вона зʼявилась.', 'ok');
   }
   $('#icontoggle').addEventListener('click', () => { $('#iconbox').hidden = false; });
-  $('#guide').addEventListener('click', () => { $('#guidebox').hidden = false; });
+  const APP_VERSION = '2026.10.15';
+  $('#guide').addEventListener('click', () => {
+    $('#appver').textContent = 'Версія ' + APP_VERSION + (swVersion && swVersion !== APP_VERSION ? ' · кеш ' + swVersion : '');
+    $('#guidebox').hidden = false;
+  });
   $('#guideok').addEventListener('click', () => { $('#guidebox').hidden = true; });
   $('#guidebox').addEventListener('click', e => { if (e.target === $('#guidebox')) $('#guidebox').hidden = true; });
   $('#iconok').addEventListener('click', () => { $('#iconbox').hidden = true; });
@@ -2159,9 +2137,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
   }
   function stopVoice() { voiceOn = false; $('#voice').classList.remove('on'); if (recog) { recog.onend = null; try { recog.stop(); } catch (_) {} } status('Голос вимкнено', 'dim'); }
   $('#voice').addEventListener('click', () => voiceOn ? stopVoice() : startVoice());
-  $('#vhelp').addEventListener('click', () => { $('#vhelpbox').hidden = false; });
-  $('#vhok').addEventListener('click', () => { $('#vhelpbox').hidden = true; });
-  $('#vhelpbox').addEventListener('click', e => { if (e.target === $('#vhelpbox')) $('#vhelpbox').hidden = true; });
 
   async function copyText() {
     const text = reportText();
@@ -3051,6 +3026,15 @@ Object.defineProperty(exports, '__esModule', { value: true });
   $('#mapcompass').addEventListener('click', toggleCompass);
 
   // ---- PWA: service worker + кероване оновлення (за запитом) ----
+  let swVersion = '';                                  // версія, яку реально віддає service worker
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.ready.then(r => {
+      if (!r.active) return;
+      const ch = new MessageChannel();
+      ch.port1.onmessage = e => { if (e.data && e.data.version) swVersion = e.data.version; };
+      r.active.postMessage({ type: 'getVersion' }, [ch.port2]);
+    }).catch(() => {});
+  }
   function promptUpdate(worker) {
     if (!worker) return;
     try {
