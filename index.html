@@ -1681,6 +1681,8 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
   const TIME_RE = /^\d{1,2}:\d{2}\s+/;                       // рядок уже з часом
   const MGRS_RE = /^\d{1,2}\s*[C-X]\s*[A-Z]{2}\s*\d{2,5}\s*\d{2,5}\b/i;   // координати MGRS — без часу
+  // шаблони, які в «Зараз» стають рядком завершення вильоту замість «Сів»
+  const LAND_RE = /втрат\S*\s+(дрон|бпла)|аварійн\S*\s+посадк|збит\S*\s+(дрон|бпла)/i;
   // 36UUC7010792936 → 36U UC 70107 92936
   function fmtMGRS(v) {
     const raw = String(v || '').replace(/\s+/g, '').toUpperCase();
@@ -2080,10 +2082,12 @@ Object.defineProperty(exports, '__esModule', { value: true });
       lines.push('Загальна розвідка');                          // без числа
       const tpls = cLines(rec).map(l => l.replace(TIME_RE, ''))
         .filter(l => l && !isCoord(l) && l.trim().toLowerCase() !== 'загальна розвідка');   // не дублювати рядок вище
-      tpls.forEach(l => lines.push(l));                         // шаблони, якщо додані
+      const land = tpls.filter(l => LAND_RE.test(l));           // втрата / аварійна посадка — замість «Сів»
+      (rec.lt && land.length ? tpls.filter(l => !LAND_RE.test(l)) : tpls).forEach(l => lines.push(l));
       if (rec.mgrs && !tpls.some(l => l.indexOf(rec.mgrs) >= 0)) lines.push('За координатами ' + rec.mgrs);
       if (rec.lt) {
-        lines.push('Сів: ' + hm(rec.lt));
+        if (land.length) land.forEach(l => lines.push(l + ': ' + hm(rec.lt)));   // «Втрата дрона …: 18:42»
+        else lines.push('Сів: ' + hm(rec.lt));
         if (showAir) lines.push('У польоті: ' + fmt(rec.lt - rec.t));
       } else if (flying && rec === activeRec) {
         if (showAir) lines.push('У польоті: ' + fmt(Date.now() - (startTs || rec.t)));
@@ -2800,7 +2804,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
   function closePointMenu() { const m = document.getElementById('ptmenu'); if (m) m.remove(); }
 
   // ---- координати → конкретний шаблон вильоту ----
-  const COORD_RE = /\s*за координатами\s+.*$/i;
+  const COORD_RE = /\s*за координатами.*$/i;
   function coordTargetFlight() { return activeRec || flights[flights.length - 1] || null; }
   function attachCoordToLine(rec, idx, mgrs) {
     const arr = (rec.c || '').split('\n');
