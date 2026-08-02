@@ -847,6 +847,35 @@ Object.defineProperty(exports, '__esModule', { value: true });
   .actbar button { width:54px; height:48px; }
   #share::before      { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%225%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2219%22%20r%3D%223%22%2F%3E%3Cline%20x1%3D%228.6%22%20y1%3D%2213.5%22%20x2%3D%2215.4%22%20y2%3D%2217.5%22%2F%3E%3Cline%20x1%3D%2215.4%22%20y1%3D%226.5%22%20x2%3D%228.6%22%20y2%3D%2210.5%22%2F%3E%3C%2Fsvg%3E"); }
   #previewbtn::before { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%225%22%20y%3D%223%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M8%208h8M8%2012h8M8%2016h5%22%2F%3E%3C%2Fsvg%3E"); }
+  #alarm::before      { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M18%208a6%206%200%200%200-12%200c0%207-3%209-3%209h18s-3-2-3-9%22%2F%3E%3Cpath%20d%3D%22M13.73%2021a2%202%200%200%201-3.46%200%22%2F%3E%3C%2Fsvg%3E"); }
+  #alarm.on { color:var(--ok); }
+  #alarm.ring { color:var(--err); }
+  #almbox { position:fixed; inset:0; z-index:1600; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:16px; }
+  #almbox[hidden] { display:none; }
+  #almcard { width:min(340px,100%); background:#fff; border-radius:12px; padding:16px; box-shadow:0 6px 26px rgba(0,0,0,.35); }
+  #almcard .almh { font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+  #almnext { font-size:12px; color:var(--dim); margin:6px 0 12px; }
+  .almsub { font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:1px; margin:12px 0 6px; }
+  #almdaily { display:flex; flex-direction:column; gap:6px; }
+  .almd { display:flex; align-items:center; gap:10px; font-size:13px; cursor:pointer; }
+  .almd input[type=checkbox] { width:auto; flex:0 0 auto; }
+  .almd input[type=time] { font:inherit; font-size:14px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; }
+  .almd.off input[type=time] { color:var(--dim); }
+  #almq { display:flex; flex-wrap:wrap; gap:6px; }
+  #almq button, #almrow button, #almfoot button { font:inherit; font-size:13px; padding:9px 10px; border:1px solid var(--line);
+            border-radius:6px; background:transparent; cursor:pointer; }
+  #almq button { flex:1 1 28%; }
+  #almrow { display:flex; gap:6px; margin-top:10px; }
+  #almrow input { flex:1; font:inherit; font-size:14px; padding:8px; border:1px solid var(--line); border-radius:6px; }
+  #almfoot { display:flex; gap:8px; margin-top:12px; }
+  #almfoot button { flex:1; }
+  #almfoot #almoff { color:var(--err); }
+  #almring { position:fixed; left:0; right:0; bottom:0; z-index:1900; background:var(--err,#b3261e); color:#fff;
+             display:flex; align-items:center; gap:12px; padding:14px 16px; box-shadow:0 -2px 12px rgba(0,0,0,.35); }
+  #almring[hidden] { display:none; }
+  #almring span { flex:1; font-size:14px; font-weight:700; }
+  #almring button { font:inherit; font-size:13px; font-weight:700; padding:8px 16px; border:1px solid #fff;
+             border-radius:6px; background:transparent; color:#fff; cursor:pointer; }
   #reset { color:var(--dim); }
   #reset::before      { --ic:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M21%2012a9%209%200%201%201-2.64-6.36%22%2F%3E%3Cpath%20d%3D%22M21%203v6h-6%22%2F%3E%3C%2Fsvg%3E"); }
   #reset.confirm { color:var(--err); }
@@ -1231,6 +1260,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
       <button id="previewbtn" title="Перегляд звіту">Перегляд звіту</button>
       <button id="editbtn" title="Редактор звіту">Редактор</button>
       <button id="map" title="Карта">Карта</button>
+      <button id="alarm" title="Будильник">Будильник</button>
       <button id="voice" title="Голосове керування">Голос</button>
       <button id="vhelp" title="Голосові команди">Команди</button>
     </div>
@@ -1238,6 +1268,31 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
   <div id="previewbox">
     <textarea id="preview" spellcheck="false" placeholder="Звіт зʼявиться тут…"></textarea>
+  </div>
+
+  <div id="almbox" hidden>
+    <div id="almcard">
+      <div class="almh">Будильник</div>
+      <div id="almnext">Не встановлено</div>
+      <div class="almsub">Щоденно</div>
+      <div id="almdaily"></div>
+      <div class="almsub">Разово</div>
+      <div id="almq">
+        <button type="button" data-min="5">5 хв</button>
+        <button type="button" data-min="10">10 хв</button>
+        <button type="button" data-min="15">15 хв</button>
+        <button type="button" data-min="30">30 хв</button>
+        <button type="button" data-min="60">60 хв</button>
+        <button type="button" data-min="120">2 год</button>
+      </div>
+      <div id="almrow"><input type="time" id="almtime"><button type="button" id="almset">На час</button></div>
+      <div id="almfoot"><button type="button" id="almtest">Звук</button><button type="button" id="almoff">Вимкнути</button><button type="button" id="almclose">Закрити</button></div>
+    </div>
+  </div>
+
+  <div id="almring" hidden>
+    <span id="almringtxt">⏰ Будильник</span>
+    <button type="button" id="almstop">Стоп</button>
   </div>
 
   <div id="bigbox" hidden>
@@ -1474,7 +1529,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
   }
   function normFlight(x) {
     if (typeof x === 'number') return { t: x, c: '', x: {} };
-    const o = { t: x.t, c: x.c || '', lt: x.lt, mgrs: x.mgrs || '', x: (x.x && typeof x.x === 'object') ? x.x : {} };
+    const o = { t: x.t, c: fixCoordsInText(x.c || ''), lt: x.lt, mgrs: fmtMGRS(x.mgrs || ''), x: (x.x && typeof x.x === 'object') ? x.x : {} };
     if (typeof x.rep === 'string' && x.rep) o.rep = x.rep;      // збережений вручну звіт «Зараз»
     return o;
   }
@@ -1626,6 +1681,19 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
   const TIME_RE = /^\d{1,2}:\d{2}\s+/;                       // рядок уже з часом
   const MGRS_RE = /^\d{1,2}\s*[C-X]\s*[A-Z]{2}\s*\d{2,5}\s*\d{2,5}\b/i;   // координати MGRS — без часу
+  // 36UUC7010792936 → 36U UC 70107 92936
+  function fmtMGRS(v) {
+    const raw = String(v || '').replace(/\s+/g, '').toUpperCase();
+    const m = raw.match(/^(\d{1,2})([C-X])([A-Z]{2})(\d+)$/);
+    if (!m || m[4].length % 2) return String(v || '');
+    const h = m[4].length / 2;
+    return m[1] + m[2] + ' ' + m[3] + ' ' + m[4].slice(0, h) + ' ' + m[4].slice(h);
+  }
+  // те саме для координат усередині коментарів («… за координатами 36UUC7010792936»)
+  function fixCoordsInText(t) {
+    return String(t || '').replace(/\b(\d{1,2}[C-X])\s?([A-Z]{2})\s?(\d{2,5})\s?(\d{2,5})\b/gi,
+      (m, a, b, d1, d2) => d1.length === d2.length ? fmtMGRS(a + b + d1 + d2) : m);
+  }
   function isCoord(s) { return MGRS_RE.test(s.trim()); }
   function insertTemplate(text) {
     const ta = $('#comments');
@@ -2114,6 +2182,148 @@ Object.defineProperty(exports, '__esModule', { value: true });
     const t = buildText() || '';
     if ($('#preview').value !== t) $('#preview').value = t;
   }
+  // ---- будильник ----
+  let alarmAt = parseInt(store.get('kap_alarm') || '0', 10) || 0;
+  const DAILY_DEF = [{ t: '05:45', on: false }, { t: '17:45', on: false }];  // готові часи перед змінами, типово вимкнені
+  function loadDaily() {
+    try {
+      const v = JSON.parse(store.get('kap_almdaily') || 'null');
+      if (Array.isArray(v)) return v.filter(x => x && /^\d{2}:\d{2}$/.test(x.t)).map(x => ({ t: x.t, on: x.on !== false }));
+    } catch (e) {}
+    return DAILY_DEF.map(x => Object.assign({}, x));
+  }
+  let daily = loadDaily();
+  function saveDaily() { store.set('kap_almdaily', JSON.stringify(daily)); idbSet('kap_almdaily', daily); }
+  let dailyLast = parseInt(store.get('kap_almlast') || '0', 10) || 0;
+  if (!store.get('kap_almlast')) { dailyLast = Date.now(); store.set('kap_almlast', String(dailyLast)); }
+  function setDailyLast(ts) { dailyLast = ts; store.set('kap_almlast', String(ts)); idbSet('kap_almlast', String(ts)); }
+  function nextDaily() {
+    const now = Date.now(); let best = 0;
+    daily.forEach(dl => {
+      if (!dl.on) return;
+      let ts = tsFromTime(now, dl.t);
+      if (ts <= now) ts += 24 * 3600e3;
+      if (!best || ts < best) best = ts;
+    });
+    return best;
+  }
+  function renderDaily() {
+    const box = $('#almdaily'); box.innerHTML = '';
+    daily.forEach(dl => {
+      const row = document.createElement('label'); row.className = 'almd' + (dl.on ? '' : ' off');
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = dl.on;
+      const tm = document.createElement('input'); tm.type = 'time'; tm.value = dl.t;
+      cb.addEventListener('change', () => { unlockAudio(); dl.on = cb.checked; saveDaily(); renderDaily(); renderAlarm(); });
+      tm.addEventListener('change', () => { if (tm.value) { dl.t = tm.value; saveDaily(); renderAlarm(); } });
+      row.append(cb, tm);
+      box.appendChild(row);
+    });
+  }
+  function checkDaily() {
+    const now = Date.now();
+    daily.forEach(dl => {
+      if (!dl.on) return;
+      const ts = tsFromTime(now, dl.t);
+      if (ts > now || ts <= dailyLast) return;
+      setDailyLast(ts);
+      if (now - ts <= 15 * 60000) ringOn('⏰ ' + dl.t + ' — щоденний будильник');
+      else status('⏰ Пропущено щоденний будильник ' + dl.t, 'err');
+    });
+  }
+  let ringTimer = null, actx = null;
+  function almFmt(ms) {
+    const t = Math.max(0, Math.round(ms / 1000));
+    return pad2(Math.floor(t / 3600)) + ':' + pad2(Math.floor(t / 60) % 60) + ':' + pad2(t % 60);
+  }
+  function saveAlarm() { store.set('kap_alarm', String(alarmAt || 0)); idbSet('kap_alarm', String(alarmAt || 0)); }
+  function renderAlarm() {
+    const b = $('#alarm'), one = alarmAt > Date.now(), nd = nextDaily();
+    const next = one && (!nd || alarmAt < nd) ? alarmAt : nd;                 // найближче спрацювання
+    b.classList.toggle('on', !!next && $('#almring').hidden);
+    b.title = next ? 'Будильник о ' + hm(next) + ' (через ' + almFmt(next - Date.now()) + ')' : 'Будильник';
+    $('#almnext').textContent = next
+      ? 'Найближчий о ' + hm(next) + ' · через ' + almFmt(next - Date.now()) + (next === nd ? ' (щоденний)' : '')
+      : 'Не встановлено';
+  }
+  // браузер дозволяє звук лише після дотику — готуємо контекст заздалегідь
+  function unlockAudio() {
+    try {
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+    } catch (e) {}
+  }
+  document.addEventListener('pointerdown', unlockAudio);
+  document.addEventListener('click', unlockAudio);
+  function tone(freq, at, dur) {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'square'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, actx.currentTime + at);
+    g.gain.exponentialRampToValueAtTime(0.5, actx.currentTime + at + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + at + dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(actx.currentTime + at); o.stop(actx.currentTime + at + dur + 0.02);
+  }
+  function beep() {                                    // три сигнали — чутніше, ніж один
+    try { unlockAudio(); tone(880, 0, 0.18); tone(1180, 0.24, 0.18); tone(880, 0.48, 0.28); } catch (e) {}
+  }
+  function ringOn(txt) {
+    $('#almringtxt').textContent = txt;
+    $('#almring').hidden = false;
+    $('#alarm').classList.remove('on'); $('#alarm').classList.add('ring');
+    clearInterval(ringTimer);
+    let n = 0;
+    const pulse = () => { beep(); buzz([300, 200, 300]); if (++n > 75) ringOff(); };   // ~2,5 хв і замовкне
+    pulse();
+    ringTimer = setInterval(pulse, 2000);
+  }
+  function ringOff() {
+    clearInterval(ringTimer); ringTimer = null;
+    $('#almring').hidden = true;
+    $('#alarm').classList.remove('ring');
+    buzz(0); renderAlarm();
+  }
+  function armAlarm(ts) {
+    alarmAt = ts; saveAlarm(); renderAlarm();
+    try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {}
+    status('⏰ Будильник о ' + hm(ts) + ' · через ' + almFmt(ts - Date.now()), 'ok');
+  }
+  function checkAlarm() {
+    if (!alarmAt) return;
+    if (Date.now() >= alarmAt) {
+      const at = alarmAt; alarmAt = 0; saveAlarm();
+      ringOn('⏰ Будильник ' + hm(at));
+    } else if (!$('#almbox').hidden || $('#alarm').title.indexOf('через') >= 0) renderAlarm();
+  }
+  $('#alarm').addEventListener('click', () => {
+    if (!$('#almring').hidden) { ringOff(); return; }       // дзвонить — тап вимикає
+    renderDaily(); renderAlarm(); $('#almtime').value = hhmm(Date.now() + 3600e3);
+    $('#almbox').hidden = false;
+  });
+  $('#almq').addEventListener('click', e => {
+    const m = e.target && e.target.dataset ? parseInt(e.target.dataset.min || '0', 10) : 0;
+    if (!m) return;
+    armAlarm(Date.now() + m * 60000); $('#almbox').hidden = true;
+  });
+  $('#almset').addEventListener('click', () => {
+    const v = $('#almtime').value; if (!v) return;
+    const ts = tsFromTime(Date.now(), v);
+    armAlarm(ts <= Date.now() ? ts + 24 * 3600e3 : ts);       // час уже минув — на завтра
+    $('#almbox').hidden = true;
+  });
+  $('#almoff').addEventListener('click', () => {
+    alarmAt = 0; saveAlarm(); renderAlarm(); $('#almbox').hidden = true; status('Разовий будильник вимкнено', 'dim');
+  });
+  $('#almclose').addEventListener('click', () => { $('#almbox').hidden = true; });
+  $('#almbox').addEventListener('click', e => { if (e.target === $('#almbox')) $('#almbox').hidden = true; });
+  $('#almtest').addEventListener('click', () => { unlockAudio(); beep(); buzz([200, 100, 200]); status('Перевірка сигналу', 'dim'); });
+  $('#almstop').addEventListener('click', ringOff);
+  if (alarmAt && Date.now() >= alarmAt) {                     // спрацював, поки застосунок був закритий
+    status('⏰ Будильник мав спрацювати о ' + hm(alarmAt), 'err');
+    alarmAt = 0; saveAlarm();
+  }
+  renderDaily(); renderAlarm();
+  setInterval(() => { checkAlarm(); checkDaily(); }, 1000);
+
   // ---- великий редактор звіту: номери рядків + перенос ----
   let bigEdit = store.get('kap_bigedit') === '1';
   $('#bigedit').checked = bigEdit;
@@ -2230,6 +2440,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
       });
       dI.addEventListener('input', () => { events[idx].text = dI.value; refreshReport(); });
       cI.addEventListener('input', () => { events[idx].mgrs = cI.value.trim(); refreshReport(); });
+      cI.addEventListener('blur', () => { const v = fmtMGRS(cI.value.trim()); cI.value = v; events[idx].mgrs = v; saveEvents(); refreshReport(); });
       del.addEventListener('click', () => { events.splice(idx, 1); refreshReport(); renderEvents(); });
     });
   }
@@ -2470,10 +2681,13 @@ Object.defineProperty(exports, '__esModule', { value: true });
   let pickedCoords = '';                          // MGRS останньої точки — для подій звіту
   let points = [], pointLayer = {};               // {id,lat,lng,name,color,mgrs}
   const PT_COLORS = ['#c0392b', '#e67e22', '#f1c40f', '#1f7a1f', '#2980b9', '#8e44ad', '#111111', '#ffffff'];
-  function loadPoints() { try { const v = JSON.parse(store.get('kap_points') || 'null'); if (Array.isArray(v)) return v; } catch (e) {} return []; }
+  function loadPoints() {
+    try { const v = JSON.parse(store.get('kap_points') || 'null'); if (Array.isArray(v)) return v.map(p => (p.mgrs ? Object.assign({}, p, { mgrs: fmtMGRS(p.mgrs) }) : p)); } catch (e) {}
+    return [];
+  }
   points = loadPoints();
   function savePoints() { store.set('kap_points', JSON.stringify(points)); idbSet('kap_points', points); }
-  function ptMGRS(lat, lng) { try { return window.mgrs ? window.mgrs.forward([lng, lat]) : lat.toFixed(5) + ', ' + lng.toFixed(5); } catch (e) { return lat.toFixed(5) + ', ' + lng.toFixed(5); } }
+  function ptMGRS(lat, lng) { try { return window.mgrs ? fmtMGRS(window.mgrs.forward([lng, lat])) : lat.toFixed(5) + ', ' + lng.toFixed(5); } catch (e) { return lat.toFixed(5) + ', ' + lng.toFixed(5); } }
 
   function loadLeaflet() {
     if (window.L) return Promise.resolve();
@@ -2643,7 +2857,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
   // ---- геолокація ----
   function showMGRS(lat, lng) {
-    try { $('#mapcoords').textContent = window.mgrs ? window.mgrs.forward([lng, lat]) : lat.toFixed(5) + ', ' + lng.toFixed(5); }
+    try { $('#mapcoords').textContent = window.mgrs ? fmtMGRS(window.mgrs.forward([lng, lat])) : lat.toFixed(5) + ', ' + lng.toFixed(5); }
     catch (e) { $('#mapcoords').textContent = lat.toFixed(5) + ', ' + lng.toFixed(5); }
   }
   function drawGps(lat, lng, acc) {
